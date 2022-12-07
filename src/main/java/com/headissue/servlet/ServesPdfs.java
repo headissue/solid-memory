@@ -1,16 +1,12 @@
 package com.headissue.servlet;
 
-import com.headissue.Application;
 import com.headissue.domain.AccessRule;
-import jakarta.servlet.*;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jdk.jfr.ContentType;
 import org.eclipse.jetty.http.MimeTypes;
-import org.eclipse.jetty.util.StringUtil;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.*;
@@ -27,12 +23,13 @@ import static org.eclipse.jetty.util.StringUtil.isBlank;
 
 public class ServesPdfs extends HttpServlet {
 
-    private static final Logger logger = LoggerFactory.getLogger(Application.class);
     private final File directory;
+    private final Logger accessReporter;
     private final Yaml yaml = new Yaml();
 
-    public ServesPdfs(File directory) {
+    public ServesPdfs(File directory, Logger accessReporter) {
         this.directory = directory;
+        this.accessReporter = accessReporter;
     }
 
     @Override
@@ -56,16 +53,14 @@ public class ServesPdfs extends HttpServlet {
         }
 
         AccessRule accessRule = yaml.load(new FileInputStream(accessYaml.toFile()));
-        logger.info("access: " + accessRule.getFileName() + "; " + "by: " + req.getParameter(key));
+        accessReporter.info("access: " + accessRule.getFileName() + "; " + "by: " + req.getParameter(key));
 
 
         PrintWriter writer = resp.getWriter();
         resp.setContentType(MimeTypes.Type.TEXT_HTML_UTF_8.asString());
 
-        byte[] inFileBytes = Files.readAllBytes(Paths.get(directory.getPath(), "handreichung_elternbeiraete_web.pdf"));
-        byte[] encoded = java.util.Base64.getEncoder().encode(inFileBytes);
-
-        //String base64Pdf = "JVBERi0xLjcKCjEgMCBvYmogICUgZW50cnkgcG9pbnQKPDwKICAvVHlwZSAvQ2F0YWxvZwogIC9QYWdlcyAyIDAgUgo+PgplbmRvYmoKCjIgMCBvYmoKPDwKICAvVHlwZSAvUGFnZXMKICAvTWVkaWFCb3ggWyAwIDAgMjAwIDIwMCBdCiAgL0NvdW50IDEKICAvS2lkcyBbIDMgMCBSIF0KPj4KZW5kb2JqCgozIDAgb2JqCjw8CiAgL1R5cGUgL1BhZ2UKICAvUGFyZW50IDIgMCBSCiAgL1Jlc291cmNlcyA8PAogICAgL0ZvbnQgPDwKICAgICAgL0YxIDQgMCBSIAogICAgPj4KICA+PgogIC9Db250ZW50cyA1IDAgUgo+PgplbmRvYmoKCjQgMCBvYmoKPDwKICAvVHlwZSAvRm9udAogIC9TdWJ0eXBlIC9UeXBlMQogIC9CYXNlRm9udCAvVGltZXMtUm9tYW4KPj4KZW5kb2JqCgo1IDAgb2JqICAlIHBhZ2UgY29udGVudAo8PAogIC9MZW5ndGggNDQKPj4Kc3RyZWFtCkJUCjcwIDUwIFRECi9GMSAxMiBUZgooSGVsbG8sIHdvcmxkISkgVGoKRVQKZW5kc3RyZWFtCmVuZG9iagoKeHJlZgowIDYKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDEwIDAwMDAwIG4gCjAwMDAwMDAwNzkgMDAwMDAgbiAKMDAwMDAwMDE3MyAwMDAwMCBuIAowMDAwMDAwMzAxIDAwMDAwIG4gCjAwMDAwMDAzODAgMDAwMDAgbiAKdHJhaWxlcgo8PAogIC9TaXplIDYKICAvUm9vdCAxIDAgUgo+PgpzdGFydHhyZWYKNDkyCiUlRU9G";
+        byte[] bytes = Files.readAllBytes(Paths.get(directory.getPath(), accessRule.getFileName()));
+        byte[] encoded = java.util.Base64.getEncoder().encode(bytes);
         String base64Pdf = new String(encoded);
         writer.print(
                 "<!DOCTYPE html>\n" +
@@ -199,8 +194,13 @@ public class ServesPdfs extends HttpServlet {
     private static boolean isMissingRequiredParameter(HttpServletRequest req, String key) {
         Map<String, String[]> parameters = req.getParameterMap();
         Set<String> keys = parameters.keySet();
-        boolean noParameter = keys.isEmpty() || !keys.contains(key) || isBlank(req.getParameter(key));
-        return noParameter;
+        if (keys.isEmpty()) {
+            return true;
+        }
+        if (!keys.contains(key)) {
+            return true;
+        }
+        return isBlank(req.getParameter(key));
     }
 
     private boolean isExpired(Path accessYaml) throws IOException {
