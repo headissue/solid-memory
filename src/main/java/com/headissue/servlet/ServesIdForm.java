@@ -1,18 +1,14 @@
 package com.headissue.servlet;
 
 import jakarta.servlet.DispatcherType;
-import jakarta.servlet.Servlet;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.http.MimeTypes;
-import org.eclipse.jetty.servlet.Source;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 public class ServesIdForm extends HttpServlet {
 
