@@ -4,6 +4,9 @@ public class AccessRule {
     private String fileName;
     private long ttlSeconds;
 
+    public AccessRule() {
+    }
+
     public AccessRule(String fileName, long ttlSeconds) {
         this.fileName = fileName;
         this.ttlSeconds = ttlSeconds;

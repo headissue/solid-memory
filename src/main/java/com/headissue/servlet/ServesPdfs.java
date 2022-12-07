@@ -1,25 +1,35 @@
 package com.headissue.servlet;
 
 import com.headissue.Application;
+import com.headissue.domain.AccessRule;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jdk.jfr.ContentType;
 import org.eclipse.jetty.http.MimeTypes;
+import org.eclipse.jetty.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
+import java.time.Instant;
+import java.util.Map;
+import java.util.Set;
+
+import static org.eclipse.jetty.util.StringUtil.isBlank;
 
 public class ServesPdfs extends HttpServlet {
 
     private static final Logger logger = LoggerFactory.getLogger(Application.class);
-    private File directory;
+    private final File directory;
+    private final Yaml yaml = new Yaml();
 
     public ServesPdfs(File directory) {
         this.directory = directory;
@@ -27,6 +37,28 @@ public class ServesPdfs extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String accessId = req.getPathInfo().substring("/".length());
+        Path accessYaml = Paths.get(directory.getPath(), accessId + ".yaml");
+        if (Files.notExists(accessYaml)) {
+            req.getRequestDispatcher("/404.html").forward(req, resp);
+            return;
+        }
+        if (isExpired(accessYaml)) {
+            req.getRequestDispatcher("/404.html").forward(req, resp);
+            return;
+        }
+
+        String key = "id";
+        boolean noParameter = isMissingRequiredParameter(req, key);
+        if (noParameter) {
+            req.getRequestDispatcher("/public/idForm").forward(req, resp);
+            return;
+        }
+
+        AccessRule accessRule = yaml.load(new FileInputStream(accessYaml.toFile()));
+        logger.info("access: " + accessRule.getFileName() + "; " + "by: " + req.getParameter(key));
+
+
         PrintWriter writer = resp.getWriter();
         resp.setContentType(MimeTypes.Type.TEXT_HTML_UTF_8.asString());
 
@@ -162,5 +194,23 @@ public class ServesPdfs extends HttpServlet {
                         "</script>\n" +
                         "</body>\n" +
                         "</html>");
+    }
+
+    private static boolean isMissingRequiredParameter(HttpServletRequest req, String key) {
+        Map<String, String[]> parameters = req.getParameterMap();
+        Set<String> keys = parameters.keySet();
+        boolean noParameter = keys.isEmpty() || !keys.contains(key) || isBlank(req.getParameter(key));
+        return noParameter;
+    }
+
+    private boolean isExpired(Path accessYaml) throws IOException {
+        AccessRule accessRule = yaml.load(new FileInputStream(accessYaml.toFile()));
+        Path pdf = Paths.get(directory.getPath(), accessRule.getFileName());
+        Instant now = Instant.now();
+        BasicFileAttributes attributes = Files.readAttributes(pdf, BasicFileAttributes.class);
+        FileTime fileTime = attributes.creationTime();
+
+        Instant ttl = fileTime.toInstant().plusSeconds(accessRule.getTtlSeconds());
+        return ttl.isBefore(now);
     }
 }

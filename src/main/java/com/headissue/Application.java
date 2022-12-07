@@ -2,6 +2,7 @@ package com.headissue;
 
 import com.headissue.domain.AccessRule;
 import com.headissue.servlet.Control;
+import com.headissue.servlet.ServesIdForm;
 import com.headissue.servlet.ServesPdfs;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -15,6 +16,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
 
 import static org.eclipse.jetty.servlet.ServletContextHandler.NO_SESSIONS;
 
@@ -33,8 +35,10 @@ public class Application {
         ServletContextHandler servletHandler = new ServletContextHandler(NO_SESSIONS);
 
         ServletHolder servePdfs = new ServletHolder(new ServesPdfs(directory));
+        ServletHolder serveIdForm = new ServletHolder(new ServesIdForm());
 
-        servletHandler.addServlet(servePdfs, "/public/*");
+        servletHandler.addServlet(servePdfs, "/docs/*");
+        servletHandler.addServlet(serveIdForm, "/public/idForm");
         servletHandler.addServlet(Control.class, "/api");
         server.setHandler(servletHandler);
         try {
@@ -59,7 +63,7 @@ public class Application {
             options.setPrettyFlow(true);
             options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
             Yaml yaml = new Yaml(options);
-            yaml.dump(new AccessRule("test.pdf", Long.MAX_VALUE), p);
+            yaml.dump(new AccessRule("test.pdf", 3000000000L ), p);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
