@@ -1,9 +1,12 @@
 package com.headissue.servlet;
 
+import jakarta.servlet.MultipartConfigElement;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRegistration;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
+import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,6 +18,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static org.eclipse.jetty.servlet.ServletContextHandler.NO_SESSIONS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.*;
 
@@ -39,6 +43,18 @@ class SavesPdfsTest {
         request = mock(HttpServletRequest.class, RETURNS_DEEP_STUBS);
         response = mock(HttpServletResponse.class, RETURNS_DEEP_STUBS);
         sut = new SavesPdfs(sharedTempDir.toFile());
+
+        ServletContextHandler servletContextHandler = new ServletContextHandler(NO_SESSIONS);
+        ServletRegistration.Dynamic savePdf = servletContextHandler.getServletContext().addServlet("savePdf", sut);
+        savePdf.setLoadOnStartup(1);
+        savePdf.addMapping("/public/share");
+        savePdf.setMultipartConfig(new MultipartConfigElement(
+                sharedTempDir.toString(),
+                1024 * 1024 * 10,
+                1024 * 1024 * 10,
+                0));
+
+
     }
 
     @Test

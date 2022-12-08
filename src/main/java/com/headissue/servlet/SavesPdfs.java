@@ -79,7 +79,7 @@ public class SavesPdfs extends HttpServlet {
             yaml.dump(accessRule, p);
         }
         PrintWriter writer = resp.getWriter();
-        String location = getServletContext().getContextPath() + "docs/" + fileName.hashCode() ;
+        String location = "/docs/" + fileName.hashCode() ;
         writer.print("<!DOCTYPE html>\n" +
                 "<html lang=\"en\">\n" +
                 "<head>\n" +
@@ -90,7 +90,7 @@ public class SavesPdfs extends HttpServlet {
                 "<div id=\"id-form\" class=\"container\"\n" +
                 "     style=\"display: block; max-width: 600px;border: 1px solid aliceblue; padding: 1em; border-radius: 10px; background: white; box-shadow: 0 1px  20px 10px #808080;\">\n" +
                 "    ✅ the file is accessible\n" +
-                "    <a id=\"access\" href=\"/" + location + "\">with this link</a>\n" +
+                "    <a id=\"access\" href=\"" + location + "\">with this link</a>\n" +
                 "</div>\n" +
                 "</script>\n" +
                 "</body>\n" +
