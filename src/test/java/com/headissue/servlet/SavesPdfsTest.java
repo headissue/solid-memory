@@ -1,25 +1,19 @@
 package com.headissue.servlet;
 
-import com.headissue.domain.AccessRule;
-import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Part;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.slf4j.Logger;
-import org.yaml.snakeyaml.DumperOptions;
-import org.yaml.snakeyaml.Yaml;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.Map;
+import java.util.List;
+import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.*;
@@ -48,9 +42,15 @@ class SavesPdfsTest {
     }
 
     @Test
-    void whereOpeningLiveLinkWithIdParameterReportAccess() throws ServletException, IOException {
-        when(request.getParameterMap()).thenReturn(Map.of("id", new String[]{"email@example.com"}));
-        when(request.getParameter("id")).thenReturn("email@example.com");
-        sut.doGet(request, response);
+    void whereSendingMultipartPostWritesPartToFileAndWritesAccessRuleFile() throws IOException, ServletException {
+        Part part = mock(Part.class, RETURNS_DEEP_STUBS);
+        when(part.getSubmittedFileName()).thenReturn("sample.pdf");
+        when(request.getParts()).thenReturn(List.of(part));
+        when(request.getParameter("ttl")).thenReturn("60");
+        sut.doPost(request, response);
+        verify(part, times(1)).write(anyString());
+        try (Stream<Path> list = Files.list(sharedTempDir)) {
+            assertThat("access rule yaml was written to temp dir", list.anyMatch(it -> it.getFileName().toString().endsWith(".yaml")));
+        }
     }
 }

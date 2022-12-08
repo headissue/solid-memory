@@ -1,5 +1,6 @@
 package com.headissue.servlet;
 
+import com.headissue.domain.AccessRule;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,8 +10,10 @@ import org.eclipse.jetty.http.MimeTypes;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 
@@ -67,10 +70,30 @@ public class SavesPdfs extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-       for (Part part : req.getParts()) {
-            part.write(Paths.get(directory.getPath()).resolve(String.format("%s_%s.pdf", part.getSubmittedFileName(), Instant.now().getEpochSecond())).toString());
+        Path directoryPath = Paths.get(directory.getPath());
+        Part part = req.getParts().stream().findFirst().orElseThrow();
+        String fileName = String.format("%s_%s.pdf", part.getSubmittedFileName().replaceAll(".pdf", ""), Instant.now().getEpochSecond());
+        part.write(directoryPath.resolve(fileName).toString());
+        AccessRule accessRule = new AccessRule(fileName, Long.parseLong(req.getParameter("ttl")));
+        try (PrintWriter p = new PrintWriter(new FileOutputStream(directoryPath.resolve(fileName.hashCode() + ".yaml").toString()))) {
+            yaml.dump(accessRule, p);
         }
         PrintWriter writer = resp.getWriter();
-        writer.print("The file uploaded sucessfully.");
+        String location = getServletContext().getContextPath() + "docs/" + fileName.hashCode() ;
+        writer.print("<!DOCTYPE html>\n" +
+                "<html lang=\"en\">\n" +
+                "<head>\n" +
+                "    <meta charset=\"UTF-8\">\n" +
+                "    <title>Title</title>\n" +
+                "</head>\n" +
+                "<body style=\"background: darkgray; display: flex; margin: 1em; justify-content: center;\">\n" +
+                "<div id=\"id-form\" class=\"container\"\n" +
+                "     style=\"display: block; max-width: 600px;border: 1px solid aliceblue; padding: 1em; border-radius: 10px; background: white; box-shadow: 0 1px  20px 10px #808080;\">\n" +
+                "    ✅ the file is accessible\n" +
+                "    <a id=\"access\" href=\"/" + location + "\">with this link</a>\n" +
+                "</div>\n" +
+                "</script>\n" +
+                "</body>\n" +
+                "</html>");
     }
 }

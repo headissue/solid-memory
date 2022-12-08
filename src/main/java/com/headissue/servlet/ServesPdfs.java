@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.http.MimeTypes;
 import org.slf4j.Logger;
+import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.*;
@@ -25,7 +26,15 @@ public class ServesPdfs extends HttpServlet {
 
     private final File directory;
     private final Logger accessReporter;
-    private final Yaml yaml = new Yaml();
+    private final Yaml yaml;
+
+    {
+        DumperOptions options = new DumperOptions();
+        options.setIndent(2);
+        options.setPrettyFlow(true);
+        options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+        yaml = new Yaml(options);
+    }
 
     public ServesPdfs(File directory, Logger accessReporter) {
         this.directory = directory;
