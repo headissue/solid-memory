@@ -85,13 +85,13 @@ public class ServesPdfs extends HttpServlet {
                         "\n" +
                         "</head>\n" +
                         "<body>\n" +
-                        "<div>\n" +
+                        "<div style=\"position: fixed; color: white; background: black; width: 100%;padding: 5px;\">\n" +
                         "    <button id=\"prev\">Previous</button>\n" +
                         "    <button id=\"next\">Next</button>\n" +
                         "    <span>Page: <span id=\"page_num\"></span> / <span id=\"page_count\"></span></span>\n" +
                         "</div>\n" +
                         "\n" +
-                        "<div style=\"width: 98%; margin: 0; padding: 1%; background: #c7c7c7\">\n" +
+                        "<div style=\"width: 98%; margin: 0; padding: 1%; background: #c7c7c7; padding-top:3em\">\n" +
                         "    <canvas style=\"width: 100%\" id=\"the-canvas\"></canvas>\n" +
                         "</div>\n" +
                         "<script type=\"text/javascript\">\n" +
@@ -110,7 +110,7 @@ public class ServesPdfs extends HttpServlet {
                         "        pageNum = 1,\n" +
                         "        pageRendering = false,\n" +
                         "        pageNumPending = null,\n" +
-                        "        scale = 1,\n" +
+                        "        scale = 4,\n" +
                         "        canvas = document.getElementById('the-canvas'),\n" +
                         "        ctx = canvas.getContext('2d');\n" +
                         "\n" +

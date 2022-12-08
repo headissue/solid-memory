@@ -78,6 +78,7 @@ public class SavesPdfs extends HttpServlet {
         try (PrintWriter p = new PrintWriter(new FileOutputStream(directoryPath.resolve(fileName.hashCode() + ".yaml").toString()))) {
             yaml.dump(accessRule, p);
         }
+        resp.setContentType(MimeTypes.Type.TEXT_HTML_UTF_8.asString());
         PrintWriter writer = resp.getWriter();
         String location = "/docs/" + fileName.hashCode() ;
         writer.print("<!DOCTYPE html>\n" +
