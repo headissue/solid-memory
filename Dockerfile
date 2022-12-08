@@ -13,5 +13,5 @@ FROM adoptopenjdk/openjdk11
 COPY --from=build /build/target/solid-memory-*.jar app.jar
 EXPOSE 8080
 RUN mkdir -p /tmp
-ENV FILE_STORE_DIR=/tmp
+ENV FILE_STORE_DIR=/tmp; STAGE=local
 ENTRYPOINT java -jar app.jar

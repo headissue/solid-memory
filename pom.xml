@@ -107,7 +107,7 @@
                 </executions>
                 <configuration>
                     <environmentVariables>
-                        <LOCAL_INTEGRATION_TEST>true</LOCAL_INTEGRATION_TEST>
+                        <STAGE>local</STAGE>
                     </environmentVariables>
                 </configuration>
             </plugin>

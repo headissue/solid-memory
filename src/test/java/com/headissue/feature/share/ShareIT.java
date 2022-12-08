@@ -30,7 +30,9 @@ class ShareIT {
 
     @AfterAll
     static void tearDownClass() {
-        driver.quit();
+        if (driver != null) {
+            driver.quit();
+        }
     }
 
 
