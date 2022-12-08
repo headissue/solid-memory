@@ -1,7 +1,6 @@
 package com.headissue;
 
 import com.headissue.domain.AccessRule;
-import com.headissue.servlet.Control;
 import com.headissue.servlet.SavesPdfs;
 import com.headissue.servlet.ServesIdForm;
 import com.headissue.servlet.ServesPdfs;
@@ -28,50 +27,59 @@ import static org.eclipse.jetty.servlet.ServletContextHandler.NO_SESSIONS;
 public class Application {
 
     private static final Logger logger = LoggerFactory.getLogger(Application.class);
-    public static Server server;
+    private static Server server;
+    private static int port;
 
     public static void main(String[] args) {
-        int port = getPortFromEnv();
-
-        File directory = getFileStore();
+        File directory = getFileStoreFromEnv();
         writeStaticTestFiles(directory);
-
+        port = getPortFromEnv();
         server = new Server(port);
+        server.setHandler(buildHandler(directory));
+        startServer();
+        awaitTermination();
+    }
 
-        ServletContextHandler servletHandler = new ServletContextHandler(NO_SESSIONS);
-
-        ServletHolder servePdfs = new ServletHolder(new ServesPdfs(directory, LoggerFactory.getLogger(ServesPdfs.class)));
-        ServletHolder serveIdForm = new ServletHolder(new ServesIdForm());
-//        ServletHolder savePdf = new ServletHolder(new SavesPdfs(directory));
-        ServletRegistration.Dynamic savePdf = servletHandler.getServletContext().addServlet("savePdf", new SavesPdfs(directory));
-        savePdf.setLoadOnStartup(1);
-        savePdf.addMapping("/public/share");
-        savePdf.setMultipartConfig(new MultipartConfigElement(
-                directory.getPath(),
-                1024 * 1024 * 1,
-                1024 * 1024 * 10,
-                1024 * 1024 * 10));
-
-        servletHandler.addServlet(servePdfs, "/docs/*");
-        servletHandler.addServlet(serveIdForm, "/public/idForm");
-        //servletHandler.addServlet(savePdf, "/public/share");
-        servletHandler.addServlet(Control.class, "/api");
-        server.setHandler(servletHandler);
+    private static void awaitTermination() {
         try {
-            server.start();
-            logger.info("started, listening on http://localhost:" + port);
             server.join();
         } catch (InterruptedException ex) {
             logger.info("interrupt", ex);
         } catch (Exception ex) {
-            logger.error("startup", ex);
+            logger.error("unhandled exception", ex);
             System.exit(1);
         } finally {
             server.destroy();
         }
     }
 
-    private static File getFileStore() {
+    private static void startServer() {
+        try {
+            server.start();
+            logger.info("started, listening on http://localhost:" + port);
+        } catch (Exception e) {
+            logger.error("startup", e);
+            System.exit(1);
+        }
+    }
+
+    private static ServletContextHandler buildHandler(File directory) {
+        ServletContextHandler servletHandler = new ServletContextHandler(NO_SESSIONS);
+
+        servletHandler.addServlet(new ServletHolder(new ServesPdfs(directory, LoggerFactory.getLogger(ServesPdfs.class))), "/docs/*");
+        servletHandler.addServlet(new ServletHolder(new ServesIdForm()), "/public/idForm");
+        ServletRegistration.Dynamic savePdf = servletHandler.getServletContext().addServlet("savePdf", new SavesPdfs(directory));
+        savePdf.setLoadOnStartup(1);
+        savePdf.addMapping("/public/share");
+        savePdf.setMultipartConfig(new MultipartConfigElement(
+                directory.getPath(),
+                1024 * 1024 * 10,
+                1024 * 1024 * 10,
+                0));
+        return servletHandler;
+    }
+
+    private static File getFileStoreFromEnv() {
         File directory;
         String test = System.getenv("LOCAL_INTEGRATION_TEST");
         if (Boolean.parseBoolean(test)) {
@@ -79,7 +87,7 @@ public class Application {
             assert resource != null;
             directory = Paths.get(resource.getPath()).toFile();
         } else {
-            directory = getDirectoryAndTestReadWriteAccess();
+            directory = getDirectoryFromEnvAndTestReadWriteAccess();
         }
         return directory;
     }
@@ -118,7 +126,7 @@ public class Application {
         }
     }
 
-    private static File getDirectoryAndTestReadWriteAccess() {
+    private static File getDirectoryFromEnvAndTestReadWriteAccess() {
         String fileStoreDirectory = System.getenv().get("FILE_STORE_DIR");
         File directory = Paths.get(fileStoreDirectory).toFile();
         if (!directory.isDirectory()) {
