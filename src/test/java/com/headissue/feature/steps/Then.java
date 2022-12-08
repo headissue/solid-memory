@@ -42,7 +42,4 @@ public class Then {
 
     }
 
-    public void theyClickTheShareLink() {
-        driver.findElement(By.cssSelector("#access")).click();
-    }
 }

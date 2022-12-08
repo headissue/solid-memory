@@ -38,7 +38,7 @@ class ShareIT {
     void whereUploadingPdfReturnsValidShareLink() {
         when.theyUploadPdf();
         then.theyShouldSeeTheShareLink();
-        then.theyClickTheShareLink();
+        when.theyClickTheShareLink();
         then.theySeeThePromptToProvideEmailAddress();
     }
 

@@ -28,4 +28,8 @@ public class When {
         upload_file.sendKeys(this.getClass().getResource("sample.pdf").getPath());
         driver.findElement(By.cssSelector("button[type='submit']")).click();
     }
+
+    public void theyClickTheShareLink() {
+        driver.findElement(By.cssSelector("#access")).click();
+    }
 }
