@@ -43,7 +43,7 @@ public class SavesPdfs extends HttpServlet {
                         "-moz-transition: opacity 0.2s 0.2s ease;\n" +
                         "-o-transition: opacity 0.2s 0.2s ease;\n" +
                         "transition: opacity 0.2s 0.2s ease; opacity: 0;\">\n" +
-                        "    <p>Please enter your email to continue</p>\n" +
+                        "    \n" +
                         "    <form enctype=\"multipart/form-data\" method=\"post\" onsubmit=\"function setAction(form) {\n" +
                         "        form.action = window.location.href\n" +
                         "        return form.submit;\n" +
