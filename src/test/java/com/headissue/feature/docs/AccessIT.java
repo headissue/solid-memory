@@ -15,37 +15,34 @@ import org.openqa.selenium.chrome.ChromeDriver;
 @ExtendWith(ApplicationServerExtension.class)
 class AccessIT {
 
-    private static WebDriver driver;
-    private static Given given;
-    private static When when;
-    private static Then then;
+  private static WebDriver driver;
+  private static Given given;
+  private static When when;
+  private static Then then;
 
-    @BeforeAll
-    static void setUpClass() {
-        driver = new ChromeDriver();
-        driver.get("http://localhost:8080");
-        given = new Given(driver);
-        when = new When(driver);
-        then = new Then(driver);
-    }
+  @BeforeAll
+  static void setUpClass() {
+    driver = new ChromeDriver();
+    driver.get("http://localhost:8080");
+    given = new Given(driver);
+    when = new When(driver);
+    then = new Then(driver);
+  }
 
-    @AfterAll
-    static void tearDownClass() {
-        driver.quit();
-    }
+  @AfterAll
+  static void tearDownClass() {
+    driver.quit();
+  }
 
-    @BeforeEach
-    void setUp() {
+  @BeforeEach
+  void setUp() {}
 
-    }
-
-    @Test
-    void whereTheyCanSeeThePdfWhenTheyProvideAnEmailAddress() {
-        when.theyOpenTheTestPdfWithoutProvidingId();
-        then.theySeeThePromptToProvideEmailAddress();
-        when.theySubmitAnEmail();
-        then.theyShouldSeeThePdfCanvasAndControls();
-        then.theyShouldSeeExamplePdfHasTwoPages();
-    }
-
+  @Test
+  void whereTheyCanSeeThePdfWhenTheyProvideAnEmailAddress() {
+    when.theyOpenTheTestPdfWithoutProvidingId();
+    then.theySeeThePromptToProvideEmailAddress();
+    when.theySubmitAnEmail();
+    then.theyShouldSeeThePdfCanvasAndControls();
+    then.theyShouldSeeExamplePdfHasTwoPages();
+  }
 }
