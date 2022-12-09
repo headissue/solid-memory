@@ -6,29 +6,29 @@ import org.yaml.snakeyaml.nodes.Tag;
 @SuppressWarnings("unused")
 public class AccessRule {
   private String fileName;
-  private long ttlSeconds;
+  private long ttlDays;
 
   public AccessRule() {}
 
-  public AccessRule(String fileName, long ttlSeconds) {
+  public AccessRule(String fileName, long ttlDays) {
     this.fileName = fileName;
-    this.ttlSeconds = ttlSeconds;
+    this.ttlDays = ttlDays;
   }
 
   public String getFileName() {
     return fileName;
   }
 
-  public long getTtlSeconds() {
-    return ttlSeconds;
+  public long getTtlDays() {
+    return ttlDays;
   }
 
   public void setFileName(String fileName) {
     this.fileName = fileName;
   }
 
-  public void setTtlSeconds(long ttlSeconds) {
-    this.ttlSeconds = ttlSeconds;
+  public void setTtlDays(long ttlDays) {
+    this.ttlDays = ttlDays;
   }
 
   public static class Representer extends org.yaml.snakeyaml.representer.Representer {

@@ -14,6 +14,7 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Set;
 import org.eclipse.jetty.http.MimeTypes;
@@ -219,7 +220,7 @@ public class ServesPdfs extends HttpServlet {
     BasicFileAttributes attributes = Files.readAttributes(pdf, BasicFileAttributes.class);
     FileTime fileTime = attributes.creationTime();
 
-    Instant ttl = fileTime.toInstant().plusSeconds(accessRule.getTtlSeconds());
+    Instant ttl = fileTime.toInstant().plus(accessRule.getTtlDays(), ChronoUnit.DAYS);
     return ttl.isBefore(now);
   }
 }

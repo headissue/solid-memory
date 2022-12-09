@@ -1,7 +1,6 @@
 - [x] https/ssl raus
 - [x] klassennamen aus yaml raus
-
-ttl days
+- [x] ttl days
 
 ttl is optional
 

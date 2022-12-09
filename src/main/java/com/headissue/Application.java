@@ -98,7 +98,7 @@ public class Application {
     createIfNotExists(pdfPath);
     try (PrintWriter p = new PrintWriter(new FileOutputStream(yamlPath.toFile()))) {
 
-      yaml.dump(new AccessRule("test.pdf", 3000000000L), p);
+      yaml.dump(new AccessRule("test.pdf", 365 * 100), p);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
