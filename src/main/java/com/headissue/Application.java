@@ -128,15 +128,7 @@ public class Application {
     }
 
     private static File getFileStoreFromEnv() {
-        File directory;
-        if (stage.equals("local")) {
-            URL resource = Application.class.getResource(".");
-            assert resource != null;
-            directory = Paths.get(resource.getPath()).toFile();
-        } else {
-            directory = getDirectoryFromEnvAndTestReadWriteAccess();
-        }
-        return directory;
+            return getDirectoryFromEnvAndTestReadWriteAccess();
     }
 
     private static void writeStaticTestFiles(File directory) {
