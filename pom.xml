@@ -107,7 +107,7 @@
                 </executions>
                 <configuration>
                     <environmentVariables>
-                        <STAGE>local</STAGE>
+                        <FILE_STORE_DIR>${project.build.directory}</FILE_STORE_DIR>
                     </environmentVariables>
                 </configuration>
             </plugin>

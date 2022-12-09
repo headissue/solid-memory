@@ -8,9 +8,6 @@ Build it with `mvn package`, set env like
 ```bash
 export FILE_STORE_DIR=/path/to/dir # set a writable directory
 export PORT=9000 #optional, defaults to 8080
-export SSL_PORT=9443 #optional, defaults to 8443
-export KEYSTORE_PATH=/path/to/keystore.jks 
-export KEYSTORE_SECRET="YourSecret!" 
 ```
 and run it with `java -jar target/solid-memory*.jar`
 

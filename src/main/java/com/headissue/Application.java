@@ -6,15 +6,9 @@ import com.headissue.servlet.ServesIdForm;
 import com.headissue.servlet.ServesPdfs;
 import jakarta.servlet.MultipartConfigElement;
 import jakarta.servlet.ServletRegistration;
-import org.eclipse.jetty.server.HttpConfiguration;
-import org.eclipse.jetty.server.HttpConnectionFactory;
-import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.DumperOptions;
@@ -24,13 +18,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
 
-import static java.lang.String.format;
 import static org.eclipse.jetty.servlet.ServletContextHandler.NO_SESSIONS;
 
 
@@ -38,26 +30,13 @@ public class Application {
 
     private static final Logger logger = LoggerFactory.getLogger(Application.class);
     private static Server server;
-    private static String stage;
     private static int port;
-    private static int sslPort;
-    private static String keyStorePath;
-    private static String keystoreSecret;
 
     public static void main(String[] args) {
-        stage = EnvironmentVariables.get("STAGE", "production");
         port = EnvironmentVariables.getAsInt("PORT", 8080);
-        sslPort = EnvironmentVariables.getAsInt("SSL_PORT", 8443);
-        if (stage.equals("production")) {
-            keyStorePath = EnvironmentVariables.get("KEYSTORE_PATH");
-            keystoreSecret = EnvironmentVariables.get("KEYSTORE_SECRET");
-        }
         File directory = getFileStoreFromEnv();
         writeStaticTestFiles(directory);
         server = new Server(port);
-        if (stage.equals("production")) {
-            server.addConnector(buildSslConnector());
-        }
         server.setHandler(buildHandler(directory));
         startServer();
         awaitTermination();
@@ -66,11 +45,7 @@ public class Application {
     private static void startServer() {
         try {
             server.start();
-            if (stage.equals("production")) {
-                logger.info(format("listening on http://localhost:%d and https://localhost:%d", port, sslPort));
-            } else {
-                logger.info("listening on http://localhost:" + port);
-            }
+            logger.info("listening on http://localhost:" + port);
         } catch (Exception e) {
             logger.error("startup", e);
             System.exit(1);
@@ -90,28 +65,6 @@ public class Application {
         }
     }
 
-    private static ServerConnector buildSslConnector() {
-        // The HTTP configuration object.
-        HttpConfiguration httpConfig = new HttpConfiguration();
-        // Add the SecureRequestCustomizer because we are using TLS.
-        SecureRequestCustomizer customizer = new SecureRequestCustomizer();
-        // make localhost work
-        customizer.setSniHostCheck(false);
-        httpConfig.addCustomizer(customizer);
-        // The ConnectionFactory for HTTP/1.1.
-        HttpConnectionFactory http11 = new HttpConnectionFactory(httpConfig);
-        // Configure the SslContextFactory with the keyStore information.
-        SslContextFactory.Server sslContextFactory = new SslContextFactory.Server();
-        sslContextFactory.setKeyStorePath(keyStorePath);
-        sslContextFactory.setKeyStorePassword(keystoreSecret);
-        // The ConnectionFactory for TLS.
-        SslConnectionFactory tls = new SslConnectionFactory(sslContextFactory, http11.getProtocol());
-        // The ServerConnector instance.
-        ServerConnector connector = new ServerConnector(server, tls, http11);
-        connector.setPort(sslPort);
-        return connector;
-    }
-
     private static ServletContextHandler buildHandler(File directory) {
         ServletContextHandler servletHandler = new ServletContextHandler(NO_SESSIONS);
         servletHandler.addServlet(new ServletHolder(new ServesPdfs(directory, LoggerFactory.getLogger(ServesPdfs.class))), "/docs/*");
@@ -128,7 +81,7 @@ public class Application {
     }
 
     private static File getFileStoreFromEnv() {
-            return getDirectoryFromEnvAndTestReadWriteAccess();
+        return getDirectoryFromEnvAndTestReadWriteAccess();
     }
 
     private static void writeStaticTestFiles(File directory) {
