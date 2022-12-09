@@ -13,13 +13,15 @@ Doc needs an owner field.
 
 move Previous / Next to the right. "Page 1 / 4 Previous Next"
 
-download button
-
 email eingabe sollte nicht im link sichtbar sein
 
-no url prefix, http://localhost:8080/docs/1757049089 >= http://localhost:8080/1757049089
-
 url without prefix and 8 chars: https://xyz.cc/abcd1234
+
+footer with link to privacy bla
+
+some static text at /index.html
+
+optional download button, with logging download
 
 ## Prio C
 
