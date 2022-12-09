@@ -1,11 +1,12 @@
 package com.headissue.feature.steps;
 
+import static org.openqa.selenium.By.cssSelector;
+
+import java.util.Objects;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-
-import static org.openqa.selenium.By.cssSelector;
 
 public class When {
   private final WebDriver driver;
@@ -15,7 +16,7 @@ public class When {
   }
 
   public void theyOpenTheTestPdfWithoutProvidingId() {
-    driver.get("http://localhost:8080/docs/test");
+    driver.get("http://localhost:8080/docs/00000000");
   }
 
   public void theySubmitAnEmail() {
@@ -27,7 +28,8 @@ public class When {
   public void theyUploadPdf() {
     driver.navigate().to("http://localhost:8080/public/share");
     WebElement upload_file = driver.findElement(By.cssSelector("input[type='file']"));
-    upload_file.sendKeys(this.getClass().getResource("sample.pdf").getPath());
+    upload_file.sendKeys(
+        Objects.requireNonNull(this.getClass().getResource("sample.pdf")).getPath());
     driver.findElement(By.cssSelector("button[type='submit']")).click();
   }
 

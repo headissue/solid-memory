@@ -1,10 +1,10 @@
 package com.headissue.feature.steps;
 
-import org.openqa.selenium.WebDriver;
-
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.openqa.selenium.By.cssSelector;
+
+import org.openqa.selenium.WebDriver;
 
 public class Then {
   private final WebDriver driver;

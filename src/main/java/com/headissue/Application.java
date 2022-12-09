@@ -1,19 +1,13 @@
 package com.headissue;
 
+import static org.eclipse.jetty.servlet.ServletContextHandler.NO_SESSIONS;
+
 import com.headissue.domain.AccessRule;
 import com.headissue.servlet.SavesPdfs;
 import com.headissue.servlet.ServesIdForm;
 import com.headissue.servlet.ServesPdfs;
 import jakarta.servlet.MultipartConfigElement;
 import jakarta.servlet.ServletRegistration;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.yaml.snakeyaml.DumperOptions;
-import org.yaml.snakeyaml.Yaml;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -22,14 +16,29 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
-
-import static org.eclipse.jetty.servlet.ServletContextHandler.NO_SESSIONS;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.Yaml;
 
 public class Application {
 
   private static final Logger logger = LoggerFactory.getLogger(Application.class);
   private static Server server;
   private static int port;
+
+  private static final Yaml yaml;
+
+  static {
+    DumperOptions options = new DumperOptions();
+    options.setIndent(2);
+    options.setPrettyFlow(true);
+    options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+    yaml = new Yaml(new AccessRule.Representer(options), options);
+  }
 
   public static void main(String[] args) {
     port = EnvironmentVariables.getAsInt("PORT", 8080);
@@ -71,7 +80,7 @@ public class Application {
         "/docs/*");
     servletHandler.addServlet(new ServletHolder(new ServesIdForm()), "/public/idForm");
     ServletRegistration.Dynamic savePdf =
-        servletHandler.getServletContext().addServlet("savePdf", new SavesPdfs(directory));
+        servletHandler.getServletContext().addServlet("savePdf", new SavesPdfs(directory, yaml));
     savePdf.setLoadOnStartup(1);
     savePdf.addMapping("/public/share");
     savePdf.setMultipartConfig(
@@ -85,14 +94,10 @@ public class Application {
 
   private static void writeStaticTestFiles(File directory) {
     Path pdfPath = Paths.get(directory.getPath(), "test.pdf");
-    Path yamlPath = Paths.get(directory.getPath(), "test.yaml");
+    Path yamlPath = Paths.get(directory.getPath(), "00000000.yaml");
     createIfNotExists(pdfPath);
     try (PrintWriter p = new PrintWriter(new FileOutputStream(yamlPath.toFile()))) {
-      DumperOptions options = new DumperOptions();
-      options.setIndent(2);
-      options.setPrettyFlow(true);
-      options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
-      Yaml yaml = new Yaml(options);
+
       yaml.dump(new AccessRule("test.pdf", 3000000000L), p);
     } catch (IOException e) {
       throw new RuntimeException(e);

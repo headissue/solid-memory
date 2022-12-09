@@ -1,26 +1,26 @@
 package com.headissue.servlet;
 
+import static org.eclipse.jetty.servlet.ServletContextHandler.NO_SESSIONS;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.Mockito.*;
+
 import jakarta.servlet.MultipartConfigElement;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRegistration;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Stream;
-
-import static org.eclipse.jetty.servlet.ServletContextHandler.NO_SESSIONS;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.Mockito.*;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.yaml.snakeyaml.Yaml;
 
 class SavesPdfsTest {
 
@@ -38,7 +38,7 @@ class SavesPdfsTest {
   void setUp() {
     request = mock(HttpServletRequest.class, RETURNS_DEEP_STUBS);
     response = mock(HttpServletResponse.class, RETURNS_DEEP_STUBS);
-    sut = new SavesPdfs(sharedTempDir.toFile());
+    sut = new SavesPdfs(sharedTempDir.toFile(), new Yaml());
 
     ServletContextHandler servletContextHandler = new ServletContextHandler(NO_SESSIONS);
     ServletRegistration.Dynamic savePdf =

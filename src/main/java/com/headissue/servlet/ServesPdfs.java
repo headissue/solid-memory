@@ -1,15 +1,12 @@
 package com.headissue.servlet;
 
+import static org.eclipse.jetty.util.StringUtil.isBlank;
+
 import com.headissue.domain.AccessRule;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.eclipse.jetty.http.MimeTypes;
-import org.slf4j.Logger;
-import org.yaml.snakeyaml.DumperOptions;
-import org.yaml.snakeyaml.Yaml;
-
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,8 +16,10 @@ import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Set;
-
-import static org.eclipse.jetty.util.StringUtil.isBlank;
+import org.eclipse.jetty.http.MimeTypes;
+import org.slf4j.Logger;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.Yaml;
 
 public class ServesPdfs extends HttpServlet {
 
@@ -62,7 +61,7 @@ public class ServesPdfs extends HttpServlet {
       return;
     }
 
-    AccessRule accessRule = yaml.load(new FileInputStream(accessYaml.toFile()));
+    AccessRule accessRule = yaml.loadAs(new FileInputStream(accessYaml.toFile()), AccessRule.class);
     accessReporter.info(
         "access: " + accessRule.getFileName() + "; " + "by: " + req.getParameter(key));
 
@@ -214,7 +213,7 @@ public class ServesPdfs extends HttpServlet {
   }
 
   private boolean isExpired(Path accessYaml) throws IOException {
-    AccessRule accessRule = yaml.load(new FileInputStream(accessYaml.toFile()));
+    AccessRule accessRule = yaml.loadAs(new FileInputStream(accessYaml.toFile()), AccessRule.class);
     Path pdf = Paths.get(directory.getPath(), accessRule.getFileName());
     Instant now = Instant.now();
     BasicFileAttributes attributes = Files.readAttributes(pdf, BasicFileAttributes.class);

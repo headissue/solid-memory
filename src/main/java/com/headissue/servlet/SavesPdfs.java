@@ -6,9 +6,6 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
-import org.eclipse.jetty.http.MimeTypes;
-import org.yaml.snakeyaml.Yaml;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -16,14 +13,17 @@ import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import org.eclipse.jetty.http.MimeTypes;
+import org.yaml.snakeyaml.Yaml;
 
 public class SavesPdfs extends HttpServlet {
 
   private final File directory;
-  private final Yaml yaml = new Yaml();
+  private final Yaml yaml;
 
-  public SavesPdfs(File directory) {
+  public SavesPdfs(File directory, Yaml yaml) {
     this.directory = directory;
+    this.yaml = yaml;
   }
 
   @Override
