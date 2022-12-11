@@ -7,7 +7,13 @@ Minimalistic PDF file share service. Navigate your browser to `/public/share` to
 Example
 ```yaml
 fileName: shared.pdf
-ttlDays: 2 # optional, null or remove it to mark "does not expire"
+ttlDays: 2      # optional, set 0, null or remove it to mark "does not expire"
+utmParameters:  # optional, set null or remove
+  source: ""    # optional, set null or remove
+  medium: ""    # optional, set null or remove
+  campaign: ""  # optional, set null or remove
+  term: ""      # optional, set null or remove
+  content: ""   # optional, set null or remove
 ```
 
 ## prod build and run
@@ -17,10 +23,3 @@ export FILE_STORE_DIR=/path/to/dir # set a writable directory
 export PORT=9000 #optional, defaults to 8080
 ```
 and run it with `java -jar target/solid-memory*.jar`
-
-## dev
-env:
-```bash
-export FILE_STORE_DIR=/path/to/dir # set a writable directory
-export STAGE=local
-```

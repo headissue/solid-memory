@@ -1,6 +1,7 @@
 package com.headissue.servlet;
 
 import com.headissue.domain.AccessRule;
+import com.headissue.domain.UtmParameters;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,7 +20,6 @@ import java.util.Collection;
 import org.eclipse.jetty.http.MimeTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
 public class ServesPdfs extends HttpServlet {
@@ -28,17 +28,10 @@ public class ServesPdfs extends HttpServlet {
   private final Logger accessReporter;
   private final Yaml yaml;
 
-  {
-    DumperOptions options = new DumperOptions();
-    options.setIndent(2);
-    options.setPrettyFlow(true);
-    options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
-    yaml = new Yaml(options);
-  }
-
-  public ServesPdfs(File directory, Logger accessReporter) {
+  public ServesPdfs(File directory, Logger accessReporter, Yaml yaml) {
     this.directory = directory;
     this.accessReporter = accessReporter;
+    this.yaml = yaml;
   }
 
   @Override
@@ -81,14 +74,12 @@ public class ServesPdfs extends HttpServlet {
     }
 
     AccessRule accessRule = yaml.loadAs(new FileInputStream(accessYaml.toFile()), AccessRule.class);
-
     String visitor =
         new String(req.getPart(key).getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-    accessReporter.info("access: " + accessRule.getFileName() + "; " + "by: " + visitor);
+    reportAccess(accessRule, visitor);
 
     PrintWriter writer = resp.getWriter();
     resp.setContentType(MimeTypes.Type.TEXT_HTML_UTF_8.asString());
-
     byte[] bytes = Files.readAllBytes(Paths.get(directory.getPath(), accessRule.getFileName()));
     byte[] encoded = java.util.Base64.getEncoder().encode(bytes);
     String base64Pdf = new String(encoded);
@@ -219,6 +210,36 @@ public class ServesPdfs extends HttpServlet {
             + "</script>\n"
             + "</body>\n"
             + "</html>");
+  }
+
+  private void reportAccess(AccessRule accessRule, String visitor) {
+    StringBuilder sb = new StringBuilder();
+    sb.append("access: ").append(accessRule.getFileName()).append("; ");
+    sb.append("by: ").append(visitor).append("; ");
+    UtmParameters utmParameters = accessRule.getUtmParameters();
+    if (utmParameters != null) {
+      String content = utmParameters.getContent();
+      if (content != null) {
+        sb.append("utm_content: ").append(content).append("; ");
+      }
+      String source = utmParameters.getSource();
+      if (source != null) {
+        sb.append("utm_source: ").append(source).append("; ");
+      }
+      String medium = utmParameters.getMedium();
+      if (medium != null) {
+        sb.append("utm_medium: ").append(medium).append("; ");
+      }
+      String campaign = utmParameters.getCampaign();
+      if (campaign != null) {
+        sb.append("utm_campaign: ").append(campaign).append("; ");
+      }
+      String term = utmParameters.getTerm();
+      if (term != null) {
+        sb.append("utm_term: ").append(term).append("; ");
+      }
+    }
+    accessReporter.info(sb.toString().trim());
   }
 
   private static boolean isMissingRequiredParameter(HttpServletRequest req, String key) {

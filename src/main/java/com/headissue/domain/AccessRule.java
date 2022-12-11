@@ -11,11 +11,14 @@ public class AccessRule {
   private String fileName;
   private Integer ttlDays;
 
+  private UtmParameters utmParameters;
+
   public AccessRule() {}
 
-  public AccessRule(String fileName, Integer ttlDays) {
+  public AccessRule(String fileName, Integer ttlDays, UtmParameters utmParameters) {
     this.fileName = fileName;
     this.ttlDays = ttlDays;
+    this.utmParameters = utmParameters;
   }
 
   public String getFileName() {
@@ -34,6 +37,14 @@ public class AccessRule {
     this.ttlDays = ttlDays;
   }
 
+  public UtmParameters getUtmParameters() {
+    return utmParameters;
+  }
+
+  public void setUtmParameters(UtmParameters utmParameters) {
+    this.utmParameters = utmParameters;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -42,13 +53,15 @@ public class AccessRule {
     AccessRule that = (AccessRule) o;
 
     if (!Objects.equals(fileName, that.fileName)) return false;
-    return Objects.equals(ttlDays, that.ttlDays);
+    if (!Objects.equals(ttlDays, that.ttlDays)) return false;
+    return Objects.equals(utmParameters, that.utmParameters);
   }
 
   @Override
   public int hashCode() {
     int result = fileName != null ? fileName.hashCode() : 0;
     result = 31 * result + (ttlDays != null ? ttlDays.hashCode() : 0);
+    result = 31 * result + (utmParameters != null ? utmParameters.hashCode() : 0);
     return result;
   }
 

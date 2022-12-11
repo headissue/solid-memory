@@ -3,6 +3,7 @@ package com.headissue;
 import static org.eclipse.jetty.servlet.ServletContextHandler.NO_SESSIONS;
 
 import com.headissue.domain.AccessRule;
+import com.headissue.domain.UtmParameters;
 import com.headissue.servlet.SavesPdfs;
 import com.headissue.servlet.ServesIdForm;
 import com.headissue.servlet.ServesPdfs;
@@ -86,7 +87,8 @@ public class Application {
         servletHandler
             .getServletContext()
             .addServlet(
-                "servePdf", new ServesPdfs(directory, LoggerFactory.getLogger(ServesPdfs.class)));
+                "servePdf",
+                new ServesPdfs(directory, LoggerFactory.getLogger(ServesPdfs.class), yaml));
     servePdf.setLoadOnStartup(1);
     servePdf.addMapping("/docs/*");
     servePdf.setMultipartConfig(new MultipartConfigElement(directory.getPath(), 0, 1024, 0));
@@ -102,8 +104,9 @@ public class Application {
     Path yamlPath = Paths.get(directory.getPath(), "00000000.yaml");
     createIfNotExists(pdfPath);
     try (PrintWriter p = new PrintWriter(new FileOutputStream(yamlPath.toFile()))) {
-
-      yaml.dump(new AccessRule("test.pdf", 365 * 100), p);
+      yaml.dump(
+          new AccessRule("test.pdf", 365 * 100, new UtmParameters(null, null, "test", null, null)),
+          p);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

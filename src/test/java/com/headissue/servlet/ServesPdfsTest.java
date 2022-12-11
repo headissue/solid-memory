@@ -3,15 +3,13 @@ package com.headissue.servlet;
 import static org.mockito.Mockito.*;
 
 import com.headissue.domain.AccessRule;
+import com.headissue.domain.UtmParameters;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
-import java.io.ByteArrayInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -36,7 +34,7 @@ class ServesPdfsTest {
   RequestDispatcher requestDispatcher;
 
   @BeforeAll
-  static void setUpClass() {
+  static void setUpClass() throws IOException {
     writeMockAccessFiles();
   }
 
@@ -46,7 +44,7 @@ class ServesPdfsTest {
     requestDispatcher = mock(RequestDispatcher.class, RETURNS_DEEP_STUBS);
     response = mock(HttpServletResponse.class, RETURNS_DEEP_STUBS);
     accessReporter = mock(Logger.class, RETURNS_DEEP_STUBS);
-    sut = new ServesPdfs(sharedTempDir.toFile(), accessReporter);
+    sut = new ServesPdfs(sharedTempDir.toFile(), accessReporter, new Yaml());
 
     when(request.getRequestDispatcher(anyString())).thenReturn(requestDispatcher);
   }
@@ -85,35 +83,28 @@ class ServesPdfsTest {
         .thenReturn(new ByteArrayInputStream("email@example.com".getBytes()));
     when(request.getPart("id")).thenReturn(part);
     sut.doPost(request, response);
-    verify(accessReporter).info("access: test.pdf; by: email@example.com");
+    verify(accessReporter).info("access: test.pdf; by: email@example.com; utm_content: test;");
   }
 
   // TODO the whole filestore should be a client so we can mock it and switch underlying tech, mock
   // file generation times etc
-  static void writeMockAccessFiles() {
+  static void writeMockAccessFiles() throws IOException {
     DumperOptions options = new DumperOptions();
     options.setIndent(2);
     options.setPrettyFlow(true);
     options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
     Yaml yaml = new Yaml(options);
 
-    try (PrintWriter p =
-        new PrintWriter(
-            new FileOutputStream(sharedTempDir.resolve("willGrantAccess.yaml").toFile()))) {
-      yaml.dump(new AccessRule("test.pdf", 1), p);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
+    try (PrintWriter accessWriter =
+            new PrintWriter(
+                new FileOutputStream(sharedTempDir.resolve("willGrantAccess.yaml").toFile()));
+        PrintWriter expiredWriter =
+            new PrintWriter(new FileOutputStream(sharedTempDir.resolve("expired.yaml").toFile()))) {
+      yaml.dump(
+          new AccessRule("test.pdf", 1, new UtmParameters(null, null, null, null, "test")),
+          accessWriter);
+      yaml.dump(new AccessRule("test.pdf", -1, null), expiredWriter);
     }
-    try (PrintWriter p =
-        new PrintWriter(new FileOutputStream(sharedTempDir.resolve("expired.yaml").toFile()))) {
-      yaml.dump(new AccessRule("test.pdf", -1), p);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-    try {
-      Files.createFile(sharedTempDir.resolve("test.pdf"));
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    Files.createFile(sharedTempDir.resolve("test.pdf"));
   }
 }

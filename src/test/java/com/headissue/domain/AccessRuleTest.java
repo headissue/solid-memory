@@ -20,7 +20,11 @@ class AccessRuleTest {
 
   @Test
   void whereWritingAndReadingAccessRuleEquals() throws FileNotFoundException {
-    AccessRule accessRule = new AccessRule("test.pdf", 365 * 100);
+    AccessRule accessRule =
+        new AccessRule(
+            "test.pdf",
+            365 * 100,
+            new UtmParameters("source", "medium", "campaign", "term", "content"));
     File file = sharedTempDir.resolve("equals.yaml").toFile();
     try (PrintWriter p = new PrintWriter(new FileOutputStream(file))) {
       Application.yaml.dump(accessRule, p);
@@ -31,8 +35,26 @@ class AccessRuleTest {
   }
 
   @Test
+  void whereNullableFieldsAreAndNotWrittenToFile() throws IOException {
+    AccessRule accessRule =
+        new AccessRule("test.pdf", null, new UtmParameters(null, null, "conference", null, null));
+    File file = sharedTempDir.resolve("optional.yaml").toFile();
+    try (PrintWriter p = new PrintWriter(new FileOutputStream(file))) {
+      Application.yaml.dump(accessRule, p);
+    }
+    assertThat(
+        accessRule,
+        CoreMatchers.is(Application.yaml.loadAs(new FileInputStream(file), AccessRule.class)));
+    try (Stream<String> lines = Files.lines(file.toPath())) {
+      String fileContent = lines.collect(Collectors.joining());
+      assertThat(fileContent, not(containsString("ttlDays")));
+      assertThat(fileContent, not(containsString("medium")));
+    }
+  }
+
+  @Test
   void whereTtlIsOptionalAndNotWrittenToFile() throws IOException {
-    AccessRule accessRule = new AccessRule("test.pdf", null);
+    AccessRule accessRule = new AccessRule("test.pdf", null, null);
     File file = sharedTempDir.resolve("optional.yaml").toFile();
     try (PrintWriter p = new PrintWriter(new FileOutputStream(file))) {
       Application.yaml.dump(accessRule, p);

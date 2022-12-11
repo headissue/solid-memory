@@ -87,7 +87,7 @@ public class SavesPdfs extends HttpServlet {
               new String(
                   ttlDaysPart.get().getInputStream().readAllBytes(), StandardCharsets.UTF_8));
     }
-    AccessRule accessRule = new AccessRule(fileName, ttlDays == 0 ? null : ttlDays);
+    AccessRule accessRule = new AccessRule(fileName, ttlDays == 0 ? null : ttlDays, null);
     try (PrintWriter p =
         new PrintWriter(
             new FileOutputStream(

@@ -5,9 +5,7 @@
 - [x] ttlDays is nullable Long
 - [x] ttlDays can be omitted in yaml
 - [x] email eingabe sollte nicht im link sichtbar sein
-
-
-utm codes for link, utm_source, utm_campaign, utm_medium, utm_term, utm_content
+- [X] utm codes for link, utm_source, utm_campaign, utm_medium, utm_term, utm_content
 
 Owner field: Please enter your email to continue. Add "Your data will only be shared with John Doe".
 Doc needs an owner field.
