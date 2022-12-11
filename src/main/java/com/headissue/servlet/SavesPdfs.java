@@ -1,8 +1,7 @@
 package com.headissue.servlet;
 
-import static com.aventrix.jnanoid.jnanoid.NanoIdUtils.DEFAULT_ALPHABET;
-
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
+import com.headissue.config.NanoIdConfig;
 import com.headissue.domain.AccessRule;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -93,7 +92,8 @@ public class SavesPdfs extends HttpServlet {
                   ttlDaysPart.get().getInputStream().readAllBytes(), StandardCharsets.UTF_8));
     }
     AccessRule accessRule = new AccessRule(fileName, ttlDays == 0 ? null : ttlDays, null);
-    String randomNanoId = NanoIdUtils.randomNanoId(random, DEFAULT_ALPHABET, 8);
+    String randomNanoId =
+        NanoIdUtils.randomNanoId(random, NanoIdConfig.alphabet, NanoIdConfig.length);
     try (PrintWriter p =
         new PrintWriter(
             new FileOutputStream(directoryPath.resolve(randomNanoId + ".yaml").toString()))) {

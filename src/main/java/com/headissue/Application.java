@@ -4,9 +4,11 @@ import static org.eclipse.jetty.servlet.ServletContextHandler.NO_SESSIONS;
 
 import com.headissue.domain.AccessRule;
 import com.headissue.domain.UtmParameters;
+import com.headissue.filter.DocumentIdForwardingFilter;
 import com.headissue.servlet.SavesPdfs;
 import com.headissue.servlet.ServesIdForm;
 import com.headissue.servlet.ServesPdfs;
+import jakarta.servlet.DispatcherType;
 import jakarta.servlet.MultipartConfigElement;
 import jakarta.servlet.ServletRegistration;
 import java.io.File;
@@ -17,8 +19,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
+import java.util.EnumSet;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.DefaultServlet;
+import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
@@ -77,6 +81,8 @@ public class Application {
 
   private static ServletContextHandler buildHandler(File directory) {
     ServletContextHandler servletHandler = new ServletContextHandler(NO_SESSIONS);
+    FilterHolder docIdFilter = new FilterHolder(new DocumentIdForwardingFilter());
+    servletHandler.addFilter(docIdFilter, "/*", EnumSet.of(DispatcherType.REQUEST));
     servletHandler.addServlet(DefaultServlet.class, "/\\d*");
     servletHandler.addServlet(new ServletHolder(new ServesIdForm()), "/public/idForm");
     ServletRegistration.Dynamic savePdf =
