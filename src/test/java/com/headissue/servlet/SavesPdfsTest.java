@@ -10,6 +10,7 @@ import jakarta.servlet.ServletRegistration;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -53,12 +54,15 @@ class SavesPdfsTest {
   @Test
   void whereSendingMultipartPostWritesPartToFileAndWritesAccessRuleFile()
       throws IOException, ServletException {
-    Part part = mock(Part.class, RETURNS_DEEP_STUBS);
-    when(part.getSubmittedFileName()).thenReturn("sample.pdf");
-    when(request.getParts()).thenReturn(List.of(part));
-    when(request.getParameter("ttl")).thenReturn("60");
+    Part filePart = mock(Part.class, RETURNS_DEEP_STUBS);
+    when(filePart.getSubmittedFileName()).thenReturn("sample.pdf");
+    when(filePart.getName()).thenReturn("file");
+    Part ttlPart = mock(Part.class, RETURNS_DEEP_STUBS);
+    when(ttlPart.getName()).thenReturn("ttlDays");
+    when(ttlPart.getInputStream()).thenReturn(new ByteArrayInputStream("7".getBytes()));
+    when(request.getParts()).thenReturn(List.of(filePart, ttlPart));
     sut.doPost(request, response);
-    verify(part, times(1)).write(anyString());
+    verify(filePart, times(1)).write(anyString());
     try (Stream<Path> list = Files.list(sharedTempDir)) {
       assertThat(
           "access rule yaml was written to temp dir",

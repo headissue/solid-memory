@@ -3,6 +3,13 @@
 
 Minimalistic PDF file share service. Navigate your browser to `/public/share` to upload a PDF and set the timeout after which the file isn't accessible anymore. PDFs are rendered when opening `/docs/${accessId}` only after the visitor entered their email address. The PDFs are rendered by PDF.js and we don't offer an easy way to download or print the file.
 
+## pdf access rules are stored as yaml files
+Example
+```yaml
+fileName: shared.pdf
+ttlDays: 2 # optional, null or remove it to mark "does not expire"
+```
+
 ## prod build and run
 Build it with `mvn package`, set env like 
 ```bash

@@ -38,7 +38,7 @@ public class ServesIdForm extends HttpServlet {
             + "-o-transition: opacity 0.2s 0.2s ease;\n"
             + "transition: opacity 0.2s 0.2s ease; opacity: 0;\">\n"
             + "    <p>Please enter your email to continue</p>\n"
-            + "    <form onsubmit=\"function setAction(form) {\n"
+            + "    <form method=\"post\" enctype=\"multipart/form-data\" onsubmit=\"function setAction(form) {\n"
             + "        form.action = window.location.href\n"
             + "        return form.submit;\n"
             + "    }\n"

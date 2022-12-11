@@ -2,8 +2,11 @@ package com.headissue.feature.steps;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.openqa.selenium.By.cssSelector;
 
+import org.hamcrest.core.StringContains;
 import org.openqa.selenium.WebDriver;
 
 public class Then {
@@ -49,5 +52,11 @@ public class Then {
         .alias("see link with id 'access'")
         .atMost(5, SECONDS)
         .until(() -> (driver.findElements(cssSelector("#access")).size() > 0));
+  }
+
+  public void theyShouldSeeThatTheirEmailIsNotPartOfTheUrl() {
+    assertThat(driver.getCurrentUrl(), not(StringContains.containsString("id")));
+    assertThat(driver.getCurrentUrl(), not(StringContains.containsString("?")));
+    assertThat(driver.getCurrentUrl(), not(StringContains.containsString("email")));
   }
 }

@@ -30,7 +30,7 @@ public class Application {
   private static Server server;
   private static int port;
 
-  private static final Yaml yaml;
+  public static final Yaml yaml;
 
   static {
     DumperOptions options = new DumperOptions();
@@ -75,9 +75,6 @@ public class Application {
 
   private static ServletContextHandler buildHandler(File directory) {
     ServletContextHandler servletHandler = new ServletContextHandler(NO_SESSIONS);
-    servletHandler.addServlet(
-        new ServletHolder(new ServesPdfs(directory, LoggerFactory.getLogger(ServesPdfs.class))),
-        "/docs/*");
     servletHandler.addServlet(new ServletHolder(new ServesIdForm()), "/public/idForm");
     ServletRegistration.Dynamic savePdf =
         servletHandler.getServletContext().addServlet("savePdf", new SavesPdfs(directory, yaml));
@@ -85,6 +82,14 @@ public class Application {
     savePdf.addMapping("/public/share");
     savePdf.setMultipartConfig(
         new MultipartConfigElement(directory.getPath(), 1024 * 1024 * 10, 1024 * 1024 * 10, 0));
+    ServletRegistration.Dynamic servePdf =
+        servletHandler
+            .getServletContext()
+            .addServlet(
+                "servePdf", new ServesPdfs(directory, LoggerFactory.getLogger(ServesPdfs.class)));
+    servePdf.setLoadOnStartup(1);
+    servePdf.addMapping("/docs/*");
+    servePdf.setMultipartConfig(new MultipartConfigElement(directory.getPath(), 0, 1024, 0));
     return servletHandler;
   }
 

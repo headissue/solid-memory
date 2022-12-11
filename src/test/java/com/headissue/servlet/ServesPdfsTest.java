@@ -7,13 +7,14 @@ import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Part;
+import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
-import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -78,9 +79,12 @@ class ServesPdfsTest {
   @Test
   void whereOpeningLiveLinkWithIdParameterReportAccess() throws ServletException, IOException {
     when(request.getPathInfo()).thenReturn("/willGrantAccess");
-    when(request.getParameterMap()).thenReturn(Map.of("id", new String[] {"email@example.com"}));
-    when(request.getParameter("id")).thenReturn("email@example.com");
-    sut.doGet(request, response);
+    Part part = mock(Part.class, RETURNS_DEEP_STUBS);
+    when(part.getName()).thenReturn("id");
+    when(part.getInputStream())
+        .thenReturn(new ByteArrayInputStream("email@example.com".getBytes()));
+    when(request.getPart("id")).thenReturn(part);
+    sut.doPost(request, response);
     verify(accessReporter).info("access: test.pdf; by: email@example.com");
   }
 
@@ -96,7 +100,7 @@ class ServesPdfsTest {
     try (PrintWriter p =
         new PrintWriter(
             new FileOutputStream(sharedTempDir.resolve("willGrantAccess.yaml").toFile()))) {
-      yaml.dump(new AccessRule("test.pdf", 60), p);
+      yaml.dump(new AccessRule("test.pdf", 1), p);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

@@ -1,8 +1,11 @@
 - [x] https/ssl raus
 - [x] klassennamen aus yaml raus
 - [x] ttl days
+- [ ] ttl is optional, like Optional<Long>, that's not how we do it https://dzone.com/articles/optional-anti-patterns
+- [x] ttlDays is nullable Long
+- [x] ttlDays can be omitted in yaml
+- [x] email eingabe sollte nicht im link sichtbar sein
 
-ttl is optional
 
 utm codes for link, utm_source, utm_campaign, utm_medium, utm_term, utm_content
 
@@ -11,7 +14,6 @@ Doc needs an owner field.
 
 move Previous / Next to the right. "Page 1 / 4 Previous Next"
 
-email eingabe sollte nicht im link sichtbar sein
 
 url without prefix and 8 chars: https://xyz.cc/abcd1234
 

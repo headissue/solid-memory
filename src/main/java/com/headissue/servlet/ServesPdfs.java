@@ -1,13 +1,13 @@
 package com.headissue.servlet;
 
-import static org.eclipse.jetty.util.StringUtil.isBlank;
-
 import com.headissue.domain.AccessRule;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Part;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -15,15 +15,15 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Map;
-import java.util.Set;
+import java.util.Collection;
 import org.eclipse.jetty.http.MimeTypes;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
 public class ServesPdfs extends HttpServlet {
-
+  private static final Logger logger = LoggerFactory.getLogger(ServesPdfs.class);
   private final File directory;
   private final Logger accessReporter;
   private final Yaml yaml;
@@ -55,16 +55,36 @@ public class ServesPdfs extends HttpServlet {
       return;
     }
 
+    req.getRequestDispatcher("/public/idForm").forward(req, resp);
+  }
+
+  @Override
+  protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+      throws ServletException, IOException {
+
     String key = "id";
     boolean noParameter = isMissingRequiredParameter(req, key);
     if (noParameter) {
       req.getRequestDispatcher("/public/idForm").forward(req, resp);
       return;
     }
+    String accessId = req.getPathInfo().substring("/".length());
+    Path accessYaml = Paths.get(directory.getPath(), accessId + ".yaml");
+
+    if (Files.notExists(accessYaml)) {
+      req.getRequestDispatcher("/404.html").forward(req, resp);
+      return;
+    }
+    if (isExpired(accessYaml)) {
+      req.getRequestDispatcher("/404.html").forward(req, resp);
+      return;
+    }
 
     AccessRule accessRule = yaml.loadAs(new FileInputStream(accessYaml.toFile()), AccessRule.class);
-    accessReporter.info(
-        "access: " + accessRule.getFileName() + "; " + "by: " + req.getParameter(key));
+
+    String visitor =
+        new String(req.getPart(key).getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+    accessReporter.info("access: " + accessRule.getFileName() + "; " + "by: " + visitor);
 
     PrintWriter writer = resp.getWriter();
     resp.setContentType(MimeTypes.Type.TEXT_HTML_UTF_8.asString());
@@ -202,25 +222,33 @@ public class ServesPdfs extends HttpServlet {
   }
 
   private static boolean isMissingRequiredParameter(HttpServletRequest req, String key) {
-    Map<String, String[]> parameters = req.getParameterMap();
-    Set<String> keys = parameters.keySet();
-    if (keys.isEmpty()) {
+    Collection<Part> parts;
+    try {
+      parts = req.getParts();
+      if (parts.isEmpty()) {
+        return true;
+      }
+      return req.getPart(key) == null;
+    } catch (IOException e) {
+      logger.error("exception getting Part", e);
       return true;
+    } catch (ServletException e) {
+      throw new RuntimeException(e);
     }
-    if (!keys.contains(key)) {
-      return true;
-    }
-    return isBlank(req.getParameter(key));
   }
 
   private boolean isExpired(Path accessYaml) throws IOException {
     AccessRule accessRule = yaml.loadAs(new FileInputStream(accessYaml.toFile()), AccessRule.class);
+    Integer ttlDays = accessRule.getTtlDays();
+    if (ttlDays == null) {
+      return false;
+    }
     Path pdf = Paths.get(directory.getPath(), accessRule.getFileName());
     Instant now = Instant.now();
     BasicFileAttributes attributes = Files.readAttributes(pdf, BasicFileAttributes.class);
     FileTime fileTime = attributes.creationTime();
 
-    Instant ttl = fileTime.toInstant().plus(accessRule.getTtlDays(), ChronoUnit.DAYS);
+    Instant ttl = fileTime.toInstant().plus(ttlDays, ChronoUnit.DAYS);
     return ttl.isBefore(now);
   }
 }

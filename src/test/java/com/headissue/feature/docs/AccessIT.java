@@ -42,6 +42,7 @@ class AccessIT {
     when.theyOpenTheTestPdfWithoutProvidingId();
     then.theySeeThePromptToProvideEmailAddress();
     when.theySubmitAnEmail();
+    then.theyShouldSeeThatTheirEmailIsNotPartOfTheUrl();
     then.theyShouldSeeThePdfCanvasAndControls();
     then.theyShouldSeeExamplePdfHasTwoPages();
   }

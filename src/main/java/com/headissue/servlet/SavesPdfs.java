@@ -10,9 +10,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.Optional;
 import org.eclipse.jetty.http.MimeTypes;
 import org.yaml.snakeyaml.Yaml;
 
@@ -55,12 +57,8 @@ public class SavesPdfs extends HttpServlet {
                 + "            <input type=\"file\" name=\"file\">\n"
                 + "        </label><br>\n"
                 + "        <label>\n"
-                + "            access expires in:\n"
-                + "            <select name=\"ttl\">\n"
-                + "                <option value=\"3600\">one hour</option>\n"
-                + "                <option value=\"86400\">one day</option>\n"
-                + "                <option value=\"604800\">one week</option>\n"
-                + "            </select>\n"
+                + "            access expires in (with 0 meaning never expires):\n"
+                + "            <input type=\"number\" value=\"0\" min=\"0\" name=\"ttlDays\">\n"
                 + "        </label>\n"
                 + "        <button type=\"submit\">SEND</button>\n"
                 + "    </form>\n"
@@ -73,13 +71,23 @@ public class SavesPdfs extends HttpServlet {
   protected void doPost(HttpServletRequest req, HttpServletResponse resp)
       throws ServletException, IOException {
     Path directoryPath = Paths.get(directory.getPath());
-    Part part = req.getParts().stream().findFirst().orElseThrow();
+    Part filePart =
+        req.getParts().stream().filter(it -> it.getName().equals("file")).findFirst().orElseThrow();
     String fileName =
         String.format(
             "%s_%s.pdf",
-            part.getSubmittedFileName().replaceAll(".pdf", ""), Instant.now().getEpochSecond());
-    part.write(directoryPath.resolve(fileName).toString());
-    AccessRule accessRule = new AccessRule(fileName, Long.parseLong(req.getParameter("ttl")));
+            filePart.getSubmittedFileName().replaceAll(".pdf", ""), Instant.now().getEpochSecond());
+    filePart.write(directoryPath.resolve(fileName).toString());
+    Optional<Part> ttlDaysPart =
+        req.getParts().stream().filter(it -> it.getName().equals("ttlDays")).findFirst();
+    int ttlDays = 0;
+    if (ttlDaysPart.isPresent()) {
+      ttlDays =
+          Integer.parseInt(
+              new String(
+                  ttlDaysPart.get().getInputStream().readAllBytes(), StandardCharsets.UTF_8));
+    }
+    AccessRule accessRule = new AccessRule(fileName, ttlDays == 0 ? null : ttlDays);
     try (PrintWriter p =
         new PrintWriter(
             new FileOutputStream(
