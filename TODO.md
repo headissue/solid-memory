@@ -1,7 +1,7 @@
 - [x] https/ssl raus
 - [x] klassennamen aus yaml raus
 - [x] ttl days
-- [ ] ttl is optional, like Optional<Long>, that's not how we do it https://dzone.com/articles/optional-anti-patterns
+- [ ] ttl is optional, like `Optional<Long>`, that's not how we do it https://dzone.com/articles/optional-anti-patterns
 - [x] ttlDays is nullable Long
 - [x] ttlDays can be omitted in yaml
 - [x] email eingabe sollte nicht im link sichtbar sein
