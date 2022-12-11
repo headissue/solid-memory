@@ -6,6 +6,7 @@
 - [x] ttlDays can be omitted in yaml
 - [x] email eingabe sollte nicht im link sichtbar sein
 - [X] utm codes for link, utm_source, utm_campaign, utm_medium, utm_term, utm_content
+- [ ]  url without prefix and 8 chars: https://xyz.cc/abcd1234
 
 Owner field: Please enter your email to continue. Add "Your data will only be shared with John Doe".
 Doc needs an owner field.
@@ -13,7 +14,6 @@ Doc needs an owner field.
 move Previous / Next to the right. "Page 1 / 4 Previous Next"
 
 
-url without prefix and 8 chars: https://xyz.cc/abcd1234
 
 footer with link to privacy bla
 

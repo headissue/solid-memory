@@ -1,5 +1,8 @@
 package com.headissue.servlet;
 
+import static com.aventrix.jnanoid.jnanoid.NanoIdUtils.DEFAULT_ALPHABET;
+
+import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import com.headissue.domain.AccessRule;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -15,6 +18,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.Random;
 import org.eclipse.jetty.http.MimeTypes;
 import org.yaml.snakeyaml.Yaml;
 
@@ -22,6 +26,7 @@ public class SavesPdfs extends HttpServlet {
 
   private final File directory;
   private final Yaml yaml;
+  private final Random random = new Random();
 
   public SavesPdfs(File directory, Yaml yaml) {
     this.directory = directory;
@@ -88,15 +93,15 @@ public class SavesPdfs extends HttpServlet {
                   ttlDaysPart.get().getInputStream().readAllBytes(), StandardCharsets.UTF_8));
     }
     AccessRule accessRule = new AccessRule(fileName, ttlDays == 0 ? null : ttlDays, null);
+    String randomNanoId = NanoIdUtils.randomNanoId(random, DEFAULT_ALPHABET, 8);
     try (PrintWriter p =
         new PrintWriter(
-            new FileOutputStream(
-                directoryPath.resolve(fileName.hashCode() + ".yaml").toString()))) {
+            new FileOutputStream(directoryPath.resolve(randomNanoId + ".yaml").toString()))) {
       yaml.dump(accessRule, p);
     }
     resp.setContentType(MimeTypes.Type.TEXT_HTML_UTF_8.asString());
     PrintWriter writer = resp.getWriter();
-    String location = "/docs/" + fileName.hashCode();
+    String location = "/docs/" + randomNanoId;
     writer.print(
         "<!DOCTYPE html>\n"
             + "<html lang=\"en\">\n"

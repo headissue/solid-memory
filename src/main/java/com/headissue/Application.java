@@ -18,6 +18,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
@@ -76,6 +77,7 @@ public class Application {
 
   private static ServletContextHandler buildHandler(File directory) {
     ServletContextHandler servletHandler = new ServletContextHandler(NO_SESSIONS);
+    servletHandler.addServlet(DefaultServlet.class, "/\\d*");
     servletHandler.addServlet(new ServletHolder(new ServesIdForm()), "/public/idForm");
     ServletRegistration.Dynamic savePdf =
         servletHandler.getServletContext().addServlet("savePdf", new SavesPdfs(directory, yaml));
