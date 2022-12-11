@@ -3,13 +3,22 @@ package com.headissue.feature;
 import static org.junit.jupiter.api.extension.ExtensionContext.Namespace.GLOBAL;
 
 import com.headissue.Application;
+import java.io.IOException;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 public class ApplicationServerExtension
     implements BeforeAllCallback, ExtensionContext.Store.CloseableResource {
 
-  private Thread app = new Thread(() -> Application.main(null));
+  private Thread app =
+      new Thread(
+          () -> {
+            try {
+              Application.main(null);
+            } catch (IOException e) {
+              throw new RuntimeException(e);
+            }
+          });
 
   public Thread getApp() {
     return app;

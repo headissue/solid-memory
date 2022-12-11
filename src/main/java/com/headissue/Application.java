@@ -4,13 +4,7 @@ import static org.eclipse.jetty.servlet.ServletContextHandler.NO_SESSIONS;
 
 import com.headissue.domain.AccessRule;
 import com.headissue.domain.UtmParameters;
-import com.headissue.filter.DocumentIdForwardingFilter;
-import com.headissue.servlet.SavesPdfs;
-import com.headissue.servlet.ServesIdForm;
-import com.headissue.servlet.ServesPdfs;
-import jakarta.servlet.DispatcherType;
-import jakarta.servlet.MultipartConfigElement;
-import jakarta.servlet.ServletRegistration;
+import com.headissue.servlet.ServletHandlerBuilder;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -19,12 +13,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
-import java.util.EnumSet;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.DefaultServlet;
-import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.util.resource.PathResource;
+import org.eclipse.jetty.util.resource.ResourceCollection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.DumperOptions;
@@ -46,7 +38,7 @@ public class Application {
     yaml = new Yaml(new AccessRule.Representer(options), options);
   }
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws IOException {
     port = EnvironmentVariables.getAsInt("PORT", 8080);
     File directory = getFileStoreFromEnv();
     writeStaticTestFiles(directory);
@@ -79,28 +71,18 @@ public class Application {
     }
   }
 
-  private static ServletContextHandler buildHandler(File directory) {
+  private static ServletContextHandler buildHandler(File directory) throws IOException {
     ServletContextHandler servletHandler = new ServletContextHandler(NO_SESSIONS);
-    FilterHolder docIdFilter = new FilterHolder(new DocumentIdForwardingFilter());
-    servletHandler.addFilter(docIdFilter, "/*", EnumSet.of(DispatcherType.REQUEST));
-    servletHandler.addServlet(DefaultServlet.class, "/\\d*");
-    servletHandler.addServlet(new ServletHolder(new ServesIdForm()), "/public/idForm");
-    ServletRegistration.Dynamic savePdf =
-        servletHandler.getServletContext().addServlet("savePdf", new SavesPdfs(directory, yaml));
-    savePdf.setLoadOnStartup(1);
-    savePdf.addMapping("/public/share");
-    savePdf.setMultipartConfig(
-        new MultipartConfigElement(directory.getPath(), 1024 * 1024 * 10, 1024 * 1024 * 10, 0));
-    ServletRegistration.Dynamic servePdf =
-        servletHandler
-            .getServletContext()
-            .addServlet(
-                "servePdf",
-                new ServesPdfs(directory, LoggerFactory.getLogger(ServesPdfs.class), yaml));
-    servePdf.setLoadOnStartup(1);
-    servePdf.addMapping("/docs/*");
-    servePdf.setMultipartConfig(new MultipartConfigElement(directory.getPath(), 0, 1024, 0));
-    return servletHandler;
+    servletHandler.setBaseResource(
+        new ResourceCollection(
+            new PathResource(Path.of("/home/wormi/workspace/solid-memory/src/main/webapp"))));
+    ServletHandlerBuilder builder = new ServletHandlerBuilder(servletHandler);
+    builder.addDefaultJspResolution();
+    builder.addForwardIdToDocument();
+    builder.addIdForm();
+    builder.addPdfUpload(directory);
+    builder.addDocumentViewer(directory);
+    return builder.getServletHandler();
   }
 
   private static File getFileStoreFromEnv() {
