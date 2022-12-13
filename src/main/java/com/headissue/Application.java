@@ -9,13 +9,21 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.util.resource.PathResource;
+import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.resource.ResourceCollection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +46,7 @@ public class Application {
     yaml = new Yaml(new AccessRule.Representer(options), options);
   }
 
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) throws IOException, URISyntaxException {
     port = EnvironmentVariables.getAsInt("PORT", 8080);
     File directory = getFileStoreFromEnv();
     writeStaticTestFiles(directory);
@@ -71,18 +79,46 @@ public class Application {
     }
   }
 
-  private static ServletContextHandler buildHandler(File directory) throws IOException {
-    ServletContextHandler servletHandler = new ServletContextHandler(NO_SESSIONS);
-    servletHandler.setBaseResource(
-        new ResourceCollection(
-            new PathResource(Path.of("/home/wormi/workspace/solid-memory/src/main/webapp"))));
-    ServletHandlerBuilder builder = new ServletHandlerBuilder(servletHandler);
-    builder.addDefaultJspResolution();
-    builder.addForwardIdToDocument();
+  private static ServletContextHandler buildHandler(File directory) {
+    ServletContextHandler servletContextHandler = buildServletContextHandler();
+    ServletHandlerBuilder builder = new ServletHandlerBuilder(servletContextHandler);
+    builder.addForwardIdToDocumentFilter();
     builder.addIdForm();
     builder.addPdfUpload(directory);
     builder.addDocumentViewer(directory);
+    builder.addTemplateRenderingAndStaticResources();
     return builder.getServletHandler();
+  }
+
+  private static ServletContextHandler buildServletContextHandler() {
+    ServletContextHandler servletContextHandler = new ServletContextHandler(NO_SESSIONS);
+    servletContextHandler.setContextPath("/");
+    Function<URL, URI> urlToUri =
+        it -> {
+          try {
+            return it.toURI();
+          } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+          }
+        };
+    Function<String, URL> getResource = it -> Application.class.getResource("/" + it);
+    Function<URI, Resource> uriToResource =
+        it -> {
+          try {
+            return Resource.newResource(it);
+          } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+          }
+        };
+    servletContextHandler.setBaseResource(
+        new ResourceCollection(
+            Stream.of("static")
+                .map(getResource)
+                .filter(Objects::nonNull)
+                .map(urlToUri)
+                .map(uriToResource)
+                .collect(Collectors.toList())));
+    return servletContextHandler;
   }
 
   private static File getFileStoreFromEnv() {

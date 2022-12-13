@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.extension.ExtensionContext.Namespace.GLOBAL;
 
 import com.headissue.Application;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
@@ -15,7 +16,7 @@ public class ApplicationServerExtension
           () -> {
             try {
               Application.main(null);
-            } catch (IOException e) {
+            } catch (IOException | URISyntaxException e) {
               throw new RuntimeException(e);
             }
           });

@@ -1,12 +1,17 @@
 package com.headissue.servlet;
 
+import com.github.jknack.handlebars.Handlebars;
+import com.github.jknack.handlebars.io.ClassPathTemplateLoader;
 import com.headissue.Application;
 import com.headissue.filter.DocumentIdForwardingFilter;
-import jakarta.servlet.DispatcherType;
-import jakarta.servlet.MultipartConfigElement;
-import jakarta.servlet.ServletRegistration;
+import jakarta.servlet.*;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.File;
-import java.util.EnumSet;
+import java.io.IOException;
+import java.util.*;
+import org.eclipse.jetty.http.MimeTypes;
 import org.eclipse.jetty.server.ResourceService;
 import org.eclipse.jetty.servlet.*;
 import org.slf4j.LoggerFactory;
@@ -50,15 +55,34 @@ public class ServletHandlerBuilder {
     servletHandler.addServlet(new ServletHolder(new ServesIdForm()), "/public/idForm");
   }
 
-  public void addForwardIdToDocument() {
+  public void addForwardIdToDocumentFilter() {
     FilterHolder docIdFilter = new FilterHolder(new DocumentIdForwardingFilter());
     servletHandler.addFilter(docIdFilter, "/*", EnumSet.of(DispatcherType.REQUEST));
   }
 
-  public void addDefaultJspResolution() {
+  public void addTemplateRenderingAndStaticResources() {
+    servletHandler.addServlet(
+        new ServletHolder(
+            "handlebars",
+            new HttpServlet() {
+              @Override
+              protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+                  throws IOException {
+                resp.setContentType(MimeTypes.Type.TEXT_HTML_UTF_8.asString());
+                Handlebars handlebars =
+                    new Handlebars(new ClassPathTemplateLoader("/static", ".hbs"));
+                String pathInfo = req.getPathInfo();
+                if (pathInfo.equals("/")) {
+                  handlebars.compile("index").apply(null, resp.getWriter());
+                } else {
+                  handlebars.compile(pathInfo).apply(null, resp.getWriter());
+                }
+              }
+            }),
+        "/*");
     ResourceService resourceService = new ResourceService();
     DefaultServlet defaultServlet = new DefaultServlet(resourceService);
-    ServletHolder jsp = new ServletHolder("jsp", defaultServlet);
-    servletHandler.addServlet(jsp, "/*");
+    servletHandler.addServlet(new ServletHolder("static", defaultServlet), "/img/*");
+    servletHandler.addServlet(new ServletHolder("static", defaultServlet), "/js/*");
   }
 }
