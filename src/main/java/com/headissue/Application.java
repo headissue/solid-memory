@@ -83,10 +83,9 @@ public class Application {
     ServletContextHandler servletContextHandler = buildServletContextHandler();
     ServletHandlerBuilder builder = new ServletHandlerBuilder(servletContextHandler);
     builder.addForwardIdToDocumentFilter();
-    builder.addIdForm();
     builder.addPdfUpload(directory);
     builder.addDocumentViewer(directory);
-    builder.addTemplateRenderingAndStaticResources();
+    builder.addTemplateRenderingAndStaticResources(directory);
     return builder.getServletHandler();
   }
 

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body style="background: darkgray; display: flex; margin: 1em; justify-content: center;"
+      onload="document.getElementById('id-form').style.opacity=1">
+<div id="id-form" class="container" style="display: block; max-width: 600px;border: 1px solid aliceblue; padding: 1em; border-radius: 10px; background: white; box-shadow: 0 1px  20px 10px #808080;-webkit-transition: opacity 0.2s 0.2s ease;
+-moz-transition: opacity 0.2s 0.2s ease;
+-o-transition: opacity 0.2s 0.2s ease;
+transition: opacity 0.2s 0.2s ease; opacity: 0;">
+    <p>Please enter your email to continue to {{ id }}</p>
+    <form method="post" enctype="multipart/form-data" action="/{{ id }}">
+        <label>
+            email:
+            <input type="email" name="id">
+        </label>
+        <button type="submit">SEND</button>
+    </form>
+</div>
+</body>
+</html>

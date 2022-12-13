@@ -12,7 +12,6 @@ import jakarta.servlet.http.Part;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,13 +20,13 @@ import org.slf4j.Logger;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
-class ServesPdfsTest {
+class SeePdfTest {
 
   @TempDir static Path sharedTempDir;
 
   Logger accessReporter;
 
-  ServesPdfs sut;
+  TemplateRendering sut;
 
   HttpServletRequest request;
   HttpServletResponse response;
@@ -44,39 +43,13 @@ class ServesPdfsTest {
     requestDispatcher = mock(RequestDispatcher.class, RETURNS_DEEP_STUBS);
     response = mock(HttpServletResponse.class, RETURNS_DEEP_STUBS);
     accessReporter = mock(Logger.class, RETURNS_DEEP_STUBS);
-    sut = new ServesPdfs(sharedTempDir.toFile(), accessReporter, new Yaml());
-
+    sut = new TemplateRendering(sharedTempDir.toFile(), accessReporter, new Yaml());
     when(request.getRequestDispatcher(anyString())).thenReturn(requestDispatcher);
   }
 
   @Test
-  void whereOpeningWrongLinkForwardsToNotFound() throws ServletException, IOException {
-    when(request.getPathInfo()).thenReturn("/doesNotExist");
-    sut.doGet(request, response);
-    verify(request).getRequestDispatcher("/404.html");
-    verify(requestDispatcher).forward(request, response);
-  }
-
-  @Test
-  void whereOpeningExpiredLinkForwardsToNotFound() throws ServletException, IOException {
-    when(request.getPathInfo()).thenReturn("/expired");
-    sut.doGet(request, response);
-    verify(request).getRequestDispatcher("/404.html");
-    verify(requestDispatcher).forward(request, response);
-  }
-
-  @Test
-  void whereOpeningLiveLinkWithoutIdParameterForwardsToForm() throws ServletException, IOException {
-    when(request.getPathInfo()).thenReturn("/willGrantAccess");
-    when(request.getParameterMap()).thenReturn(Collections.emptyMap());
-    sut.doGet(request, response);
-    verify(request).getRequestDispatcher("/public/idForm");
-    verify(requestDispatcher).forward(request, response);
-  }
-
-  @Test
-  void whereOpeningLiveLinkWithIdParameterReportAccess() throws ServletException, IOException {
-    when(request.getPathInfo()).thenReturn("/willGrantAccess");
+  void whereSendingEmailAllowsAndTracksAccess() throws ServletException, IOException {
+    when(request.getPathInfo()).thenReturn("/docs/willGrantAccess");
     Part part = mock(Part.class, RETURNS_DEEP_STUBS);
     when(part.getName()).thenReturn("id");
     when(part.getInputStream())
