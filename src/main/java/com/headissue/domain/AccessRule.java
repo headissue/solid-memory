@@ -10,15 +10,16 @@ import org.yaml.snakeyaml.nodes.Tag;
 public class AccessRule {
   private String fileName;
   private Integer ttlDays;
-
   private UtmParameters utmParameters;
+  private String owner;
 
   public AccessRule() {}
 
-  public AccessRule(String fileName, Integer ttlDays, UtmParameters utmParameters) {
+  public AccessRule(String fileName, Integer ttlDays, UtmParameters utmParameters, String owner) {
     this.fileName = fileName;
     this.ttlDays = ttlDays;
     this.utmParameters = utmParameters;
+    this.owner = owner;
   }
 
   public String getFileName() {
@@ -45,6 +46,14 @@ public class AccessRule {
     this.utmParameters = utmParameters;
   }
 
+  public String getOwner() {
+    return owner;
+  }
+
+  public void setOwner(String owner) {
+    this.owner = owner;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -54,7 +63,8 @@ public class AccessRule {
 
     if (!Objects.equals(fileName, that.fileName)) return false;
     if (!Objects.equals(ttlDays, that.ttlDays)) return false;
-    return Objects.equals(utmParameters, that.utmParameters);
+    if (!Objects.equals(utmParameters, that.utmParameters)) return false;
+    return Objects.equals(owner, that.owner);
   }
 
   @Override
@@ -62,6 +72,7 @@ public class AccessRule {
     int result = fileName != null ? fileName.hashCode() : 0;
     result = 31 * result + (ttlDays != null ? ttlDays.hashCode() : 0);
     result = 31 * result + (utmParameters != null ? utmParameters.hashCode() : 0);
+    result = 31 * result + (owner != null ? owner.hashCode() : 0);
     return result;
   }
 

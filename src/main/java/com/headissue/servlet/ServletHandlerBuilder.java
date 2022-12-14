@@ -20,19 +20,6 @@ public class ServletHandlerBuilder {
     return servletHandler;
   }
 
-  public void addDocumentViewer(File directory) {
-    ServletRegistration.Dynamic servePdf =
-        servletHandler
-            .getServletContext()
-            .addServlet(
-                "servePdf",
-                new ServesPdfs(
-                    directory, LoggerFactory.getLogger(ServesPdfs.class), Application.yaml));
-    servePdf.setLoadOnStartup(1);
-    servePdf.addMapping("/access/*");
-    servePdf.setMultipartConfig(new MultipartConfigElement(directory.getPath(), 0, 1024, 0));
-  }
-
   public void addPdfUpload(File directory) {
     ServletRegistration.Dynamic savePdf =
         servletHandler

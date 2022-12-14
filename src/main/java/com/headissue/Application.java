@@ -84,7 +84,6 @@ public class Application {
     ServletHandlerBuilder builder = new ServletHandlerBuilder(servletContextHandler);
     builder.addForwardIdToDocumentFilter();
     builder.addPdfUpload(directory);
-    builder.addDocumentViewer(directory);
     builder.addTemplateRenderingAndStaticResources(directory);
     return builder.getServletHandler();
   }
@@ -130,7 +129,11 @@ public class Application {
     createIfNotExists(pdfPath);
     try (PrintWriter p = new PrintWriter(new FileOutputStream(yamlPath.toFile()))) {
       yaml.dump(
-          new AccessRule("test.pdf", 365 * 100, new UtmParameters(null, null, "test", null, null)),
+          new AccessRule(
+              "test.pdf",
+              365 * 100,
+              new UtmParameters(null, null, "test", null, null),
+              "yours truly"),
           p);
     } catch (IOException e) {
       throw new RuntimeException(e);

@@ -74,9 +74,10 @@ class SeePdfTest {
         PrintWriter expiredWriter =
             new PrintWriter(new FileOutputStream(sharedTempDir.resolve("expired.yaml").toFile()))) {
       yaml.dump(
-          new AccessRule("test.pdf", 1, new UtmParameters(null, null, null, null, "test")),
+          new AccessRule(
+              "test.pdf", 1, new UtmParameters(null, null, null, null, "test"), "yours truly"),
           accessWriter);
-      yaml.dump(new AccessRule("test.pdf", -1, null), expiredWriter);
+      yaml.dump(new AccessRule("test.pdf", -1, null, null), expiredWriter);
     }
     Files.createFile(sharedTempDir.resolve("test.pdf"));
   }

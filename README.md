@@ -14,6 +14,7 @@ utmParameters:  # optional, set null or remove
   campaign: ""  # optional, set null or remove
   term: ""      # optional, set null or remove
   content: ""   # optional, set null or remove
+owner: ""       # optional, if set the visitor sees with whom their data will be shared 
 ```
 
 ## prod build and run

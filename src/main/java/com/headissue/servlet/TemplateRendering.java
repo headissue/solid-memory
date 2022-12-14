@@ -30,7 +30,7 @@ import org.yaml.snakeyaml.Yaml;
 
 public class TemplateRendering extends HttpServlet {
 
-  private static final Logger logger = LoggerFactory.getLogger(ServesPdfs.class);
+  private static final Logger logger = LoggerFactory.getLogger(TemplateRendering.class);
   private final File directory;
   private final Logger accessReporter;
   private final Yaml yaml;
@@ -51,12 +51,22 @@ public class TemplateRendering extends HttpServlet {
     if (pathInfo.equals("/")) {
       handlebars.compile("index.hbs").apply(null, resp.getWriter());
     } else if (pathInfo.startsWith("/docs/")) {
-      handlebars
-          .compile("docs/preDocCaptureEmail.hbs")
-          .apply(Map.of("id", pathInfo.substring("/docs/".length())), resp.getWriter());
+      handleGetDoc(resp, pathInfo);
     } else {
       handlebars.compile(pathInfo).apply(null, resp.getWriter());
     }
+  }
+
+  private void handleGetDoc(HttpServletResponse resp, String pathInfo) throws IOException {
+    String accessId = pathInfo.substring("/".length());
+    Path accessYaml = Paths.get(directory.getPath(), Path.of(accessId).getFileName() + ".yaml");
+    checkExistenceAndExpiry(accessId, accessYaml);
+    AccessRule accessRule = yaml.loadAs(new FileInputStream(accessYaml.toFile()), AccessRule.class);
+    handlebars
+        .compile("docs/preDocCaptureEmail.hbs")
+        .apply(
+            Map.of("id", pathInfo.substring("/docs/".length()), "accessRule", accessRule),
+            resp.getWriter());
   }
 
   @Override
@@ -78,12 +88,7 @@ public class TemplateRendering extends HttpServlet {
     String accessId = req.getPathInfo().substring("/".length());
     Path accessYaml = Paths.get(directory.getPath(), Path.of(accessId).getFileName() + ".yaml");
 
-    if (Files.notExists(accessYaml)) {
-      throw new NoSuchFileException(accessId);
-    }
-    if (isExpired(accessYaml)) {
-      throw new NoSuchFileException(accessId);
-    }
+    checkExistenceAndExpiry(accessId, accessYaml);
 
     AccessRule accessRule = yaml.loadAs(new FileInputStream(accessYaml.toFile()), AccessRule.class);
     String visitor =
@@ -96,6 +101,15 @@ public class TemplateRendering extends HttpServlet {
     String base64Pdf = new String(encoded);
 
     handlebars.compile("docs/showDoc.hbs").apply(Map.of("base64Pdf", base64Pdf), resp.getWriter());
+  }
+
+  private void checkExistenceAndExpiry(String accessId, Path accessYaml) throws IOException {
+    if (Files.notExists(accessYaml)) {
+      throw new NoSuchFileException(accessId);
+    }
+    if (isExpired(accessYaml)) {
+      throw new NoSuchFileException(accessId);
+    }
   }
 
   private void reportAccess(AccessRule accessRule, String visitor) {

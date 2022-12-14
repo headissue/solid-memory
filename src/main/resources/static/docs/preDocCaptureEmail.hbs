@@ -4,7 +4,7 @@
     <title>Just a moment</title>
     {{> "head.hbs"}}
     <style>
-        form {
+        #id-form {
             display: block;
             margin: 1rem auto 1rem auto;
             max-width: 600px;
@@ -20,7 +20,14 @@
 <body onload="document.getElementById('id-form').style.opacity=1">
 <main>
     <div id="id-form">
-        <p>Please enter your email to get access</p>
+        <p>
+            Please enter your email to get access.
+            {{#with accessRule}}
+                {{#if owner }}
+                    Your data will only be shared with {{owner}}.
+                {{/if}}
+            {{/with}}
+        </p>
         <form method="post" enctype="multipart/form-data" action="/{{ id }}">
             <label>
                 email:

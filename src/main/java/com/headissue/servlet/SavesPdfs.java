@@ -91,7 +91,7 @@ public class SavesPdfs extends HttpServlet {
               new String(
                   ttlDaysPart.get().getInputStream().readAllBytes(), StandardCharsets.UTF_8));
     }
-    AccessRule accessRule = new AccessRule(fileName, ttlDays == 0 ? null : ttlDays, null);
+    AccessRule accessRule = new AccessRule(fileName, ttlDays == 0 ? null : ttlDays, null, null);
     String randomNanoId =
         NanoIdUtils.randomNanoId(random, NanoIdConfig.alphabet, NanoIdConfig.length);
     try (PrintWriter p =
