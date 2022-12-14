@@ -61,6 +61,7 @@ public class ServletHandlerBuilder {
     ResourceService resourceService = new ResourceService();
     DefaultServlet defaultServlet = new DefaultServlet(resourceService);
     servletHandler.addServlet(new ServletHolder("static/img", defaultServlet), "/img/*");
+    servletHandler.addServlet(new ServletHolder("static/css", defaultServlet), "/css/*");
     servletHandler.addServlet(new ServletHolder("static/js", defaultServlet), "/js/*");
   }
 }

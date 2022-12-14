@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Welcome</title>
+    {{> "head.hbs"}}
 </head>
-<body style="background: url('/img/logo.png')">
-<h1>Welcome</h1>
-{{> atom/testPartial.hbs name="solid memory" serving=true }}
+<body>
+<main>
+    {{> "atom/testPartial.hbs" name="solid memory" serving=true }}
+</main>
+{{> "molecule/footer.hbs" }}
 </body>
 </html>
