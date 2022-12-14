@@ -4,14 +4,27 @@
     <title>Doc</title>
     <script src="/js/pdfjs-3.1.81-dist/pdf.js"></script>
     {{> "head.hbs" }}
+    <style>
+        header {
+            position: fixed;
+            color: white;
+            background: black;
+            width: 100%;
+            padding: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            gap: 1%;
+        }
+    </style>
 </head>
 <body>
+<header>
+    <span>Page: <span id="page_num"></span> / <span id="page_count"></span></span>
+    <button id="prev">Previous</button>
+    <button id="next">Next</button>
+</header>
 <main>
-    <div style="position: fixed; color: white; background: black; width: 100%;padding: 5px;">
-        <button id="prev">Previous</button>
-        <button id="next">Next</button>
-        <span>Page: <span id="page_num"></span> / <span id="page_count"></span></span>
-    </div>
 
     <div style="width: 98%; margin: 0; padding: 1%; background: #c7c7c7; padding-top:3em">
         <canvas style="width: 100%" id="the-canvas"></canvas>
