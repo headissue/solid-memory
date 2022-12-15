@@ -1,5 +1,7 @@
 package com.headissue.servlet;
 
+import static java.lang.String.format;
+
 import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.internal.lang3.StringUtils;
 import com.headissue.config.NanoIdConfig;
@@ -10,11 +12,6 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
-import org.eclipse.jetty.http.MimeTypes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.yaml.snakeyaml.Yaml;
-
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -27,8 +24,10 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Map;
-
-import static java.lang.String.format;
+import org.eclipse.jetty.http.MimeTypes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
 
 public class SeePdfs extends HttpServlet {
 
@@ -53,8 +52,18 @@ public class SeePdfs extends HttpServlet {
     String pathInfo = req.getPathInfo();
     String accessId = pathInfo.substring("/".length());
     Path accessYaml = Paths.get(directory.getPath(), Path.of(accessId).getFileName() + ".yaml");
-    checkExistenceAndExpiry(accessId, accessYaml);
+    if (Files.notExists(accessYaml)) {
+      throw new NoSuchFileException(accessId);
+    }
+    resp.setContentType(MimeTypes.Type.TEXT_HTML_UTF_8.asString());
     AccessRule accessRule = yaml.loadAs(new FileInputStream(accessYaml.toFile()), AccessRule.class);
+    if (isExpired(accessYaml)) {
+      resp.setStatus(HttpServletResponse.SC_GONE);
+      handlebars
+          .compile("docs/expired.hbs")
+          .apply(Map.of("accessRule", accessRule), resp.getWriter());
+      return;
+    }
     handlebars
         .compile("docs/preDocCaptureEmail.hbs")
         .apply(Map.of("id", accessId, "accessRule", accessRule), resp.getWriter());

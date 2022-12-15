@@ -3,6 +3,7 @@ package com.headissue.feature.steps;
 import static com.headissue.feature.Page.downloadButton;
 import static org.openqa.selenium.By.cssSelector;
 
+import com.headissue.service.TestDataService;
 import java.util.Objects;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
@@ -16,8 +17,8 @@ public class When {
     this.driver = driver;
   }
 
-  public void theyOpenTheTestPdfWithoutProvidingId() {
-    driver.get("http://localhost:8080/00000000");
+  public void theyOpenTheTestPdf(String docId) {
+    driver.get("http://localhost:8080/" + docId);
   }
 
   public void theySubmitAnEmail() {
@@ -39,7 +40,7 @@ public class When {
   }
 
   public void theyOpenTheDownloadableTestPdfSuccessfully() {
-    driver.get("http://localhost:8080/00000001");
+    theyOpenTheTestPdf(TestDataService.downloadable);
     theySubmitAnEmail();
   }
 

@@ -1,11 +1,9 @@
 package com.headissue.feature.docs;
 
 import com.headissue.feature.ApplicationServerExtension;
-import com.headissue.feature.steps.Given;
 import com.headissue.feature.steps.Then;
 import com.headissue.feature.steps.When;
-import java.nio.file.Path;
-import java.util.HashMap;
+import com.headissue.service.TestDataService;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,12 +14,14 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 
+import java.nio.file.Path;
+import java.util.HashMap;
+
 @ExtendWith(ApplicationServerExtension.class)
 class AccessIT {
 
   @TempDir private static Path tempDir;
   private static WebDriver driver;
-  private static Given given;
   private static When when;
   private static Then then;
 
@@ -35,7 +35,6 @@ class AccessIT {
 
     driver = new ChromeDriver(chromeOptions);
     driver.get("http://localhost:8080");
-    given = new Given(driver);
     when = new When(driver);
     then = new Then(driver);
   }
@@ -50,13 +49,19 @@ class AccessIT {
 
   @Test
   void whereTheyCanSeeThePdfWhenTheyProvideAnEmailAddress() {
-    when.theyOpenTheTestPdfWithoutProvidingId();
+    when.theyOpenTheTestPdf(TestDataService.defaultAccess);
     then.theySeeThePromptToProvideEmailAddress();
     when.theySubmitAnEmail();
     then.theyShouldSeeThatTheirEmailIsNotPartOfTheUrl();
     then.theyShouldSeeThePdfCanvasAndControls();
     then.theyShouldSeeExamplePdfHasTwoPages();
     then.theyShouldSeeItsNotDownloadable();
+  }
+
+  @Test
+  void whereTheAccessIsExpired() {
+    when.theyOpenTheTestPdf(TestDataService.expired);
+    then.theySeeTheExpiryMessage();
   }
 
   @Test

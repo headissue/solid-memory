@@ -12,8 +12,11 @@ import java.util.Base64;
 import org.yaml.snakeyaml.Yaml;
 
 public class TestDataService {
-  private File directory;
-  private Yaml yaml;
+  private final File directory;
+  private final Yaml yaml;
+  public static String defaultAccess = "00000000";
+  public static String downloadable = "00000001";
+  public static String expired = "00000002";
 
   public TestDataService(File directory, Yaml yaml) {
     this.directory = directory;
@@ -24,7 +27,7 @@ public class TestDataService {
     Path pdfPath = Paths.get(directory.getPath(), "test.pdf");
 
     createAccessRule(
-        "00000000.yaml",
+        defaultAccess,
         new AccessRule(
             "test.pdf",
             365 * 100,
@@ -32,10 +35,18 @@ public class TestDataService {
             "yours truly",
             false));
     createAccessRule(
-        "00000001.yaml",
+        downloadable,
         new AccessRule(
             "test.pdf",
             365 * 100,
+            new UtmParameters(null, null, "test", null, null),
+            "yours truly",
+            true));
+    createAccessRule(
+        expired,
+        new AccessRule(
+            "test.pdf",
+            -1,
             new UtmParameters(null, null, "test", null, null),
             "yours truly",
             true));
@@ -50,7 +61,7 @@ public class TestDataService {
   }
 
   private void createAccessRule(String yamlName, AccessRule accessRule) {
-    Path yamlPath = Paths.get(directory.getPath(), yamlName);
+    Path yamlPath = Paths.get(directory.getPath(), yamlName + ".yaml");
     try (PrintWriter p = new PrintWriter(new FileOutputStream(yamlPath.toFile()))) {
       yaml.dump(accessRule, p);
     } catch (IOException e) {

@@ -84,4 +84,19 @@ public class Then {
               }
             });
   }
+
+  public void theySeeTheExpiryMessage() {
+    await()
+        .alias("text match")
+        .atMost(2, SECONDS)
+        .ignoreExceptions()
+        .until(
+            () -> {
+              String body = driver.findElement(cssSelector("body")).getText();
+              assertThat(body, StringContains.containsString("expired"));
+              assertThat(body, StringContains.containsString("contact"));
+              assertThat(body, StringContains.containsString("yours truly"));
+              return true;
+            });
+  }
 }

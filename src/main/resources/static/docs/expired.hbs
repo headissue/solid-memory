@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Gone</title>
+    {{> "head.hbs"}}
+    <style>
+        #expired-message {
+            display: block;
+            margin: 1rem auto 1rem auto;
+            max-width: 600px;
+            padding: 1em;
+            -webkit-transition: opacity 0.2s 0.2s ease;
+            -moz-transition: opacity 0.2s 0.2s ease;
+            -o-transition: opacity 0.2s 0.2s ease;
+            transition: opacity 0.2s 0.2s ease;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body onload="document.getElementById('expired-message').style.opacity=1">
+<main>
+    <div id="expired-message">
+        <p>
+            Access expired, please contact {{ accessRule.owner }} to request a new link.
+        </p>
+    </div>
+
+</main>
+{{> "molecule/footer.hbs" }}
+</body>
+</html>
