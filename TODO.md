@@ -17,6 +17,5 @@
 - [x] expired link -> please contact ${owner} to get a new one http://localhost:8080/00000002
 
 ## Prio C
-
-Preview of first page and popup, after submitting the email address, the scroll function appears
+- [x] Preview of first page and popup, after submitting the email address, the scroll function appears
 Also no more warning about resubmit ;)

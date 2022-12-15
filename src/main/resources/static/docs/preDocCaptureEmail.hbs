@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <title>Just a moment</title>
+    <script src="/js/pdfjs-3.1.81-dist/pdf.js"></script>
     {{> "head.hbs"}}
     <style>
         #id-form {
@@ -36,7 +37,9 @@
             <button type="submit">SEND</button>
         </form>
     </div>
-
+    <div style="width: 50%;margin: 0 auto;padding: 1%;background: #c7c7c7;">
+        {{> organism/pdfCanvas.hbs}}
+    </div>
 </main>
 {{> "molecule/footer.hbs" }}
 </body>

@@ -64,9 +64,15 @@ public class SeePdfs extends HttpServlet {
           .apply(Map.of("accessRule", accessRule), resp.getWriter());
       return;
     }
+    Path pdfPath = Paths.get(directory.getPath(), accessRule.getFileName());
+    byte[] bytes = Files.readAllBytes(pdfPath);
+    byte[] encoded = java.util.Base64.getEncoder().encode(bytes);
+    String base64Pdf = new String(encoded);
+
+
     handlebars
         .compile("docs/preDocCaptureEmail.hbs")
-        .apply(Map.of("id", accessId, "accessRule", accessRule), resp.getWriter());
+        .apply(Map.of("id", accessId, "accessRule", accessRule, "base64Pdf", base64Pdf), resp.getWriter());
   }
 
   @Override
