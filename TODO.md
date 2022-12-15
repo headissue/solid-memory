@@ -13,8 +13,7 @@
 - [x] move Previous / Next to the right. "Page 1 / 4 Previous Next"
 - [x] Owner field: Please enter your email to continue. Add "Your data will only be shared with John Doe". 
 - [x] optional download button
-
-logging download
+- [x] logging download
 
 expired link -> please contact ${owner} to get a new one
 

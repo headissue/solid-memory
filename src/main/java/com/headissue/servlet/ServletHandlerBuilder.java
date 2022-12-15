@@ -38,7 +38,7 @@ public class ServletHandlerBuilder {
 
   public void addTemplateRenderingAndStaticResources(File directory) {
     TemplateRendering templateRendering =
-        new TemplateRendering(directory, LoggerFactory.getLogger("pdf access"), Application.yaml);
+        new TemplateRendering(directory, LoggerFactory.getLogger("pdf"), Application.yaml);
     ServletRegistration.Dynamic servePdf =
         servletHandler.getServletContext().addServlet("handlebars", templateRendering);
     servePdf.addMapping("/*");

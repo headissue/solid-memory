@@ -29,9 +29,8 @@ class AccessIT {
   static void setUpClass() {
     ChromeOptions chromeOptions = new ChromeOptions();
     var prefs = new HashMap<String, Object>();
-    prefs.put(
-        "download.default_directory",
-        tempDir.toString()); // Bypass default download directory in Chrome
+    prefs.put("download.default_directory", tempDir.toString());
+    prefs.put("plugins.always_open_pdf_externally", true);
     chromeOptions.setExperimentalOption("prefs", prefs);
 
     driver = new ChromeDriver(chromeOptions);

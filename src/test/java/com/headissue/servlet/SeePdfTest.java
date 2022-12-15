@@ -1,7 +1,5 @@
 package com.headissue.servlet;
 
-import static org.mockito.Mockito.*;
-
 import com.headissue.domain.AccessRule;
 import com.headissue.domain.UtmParameters;
 import jakarta.servlet.RequestDispatcher;
@@ -9,9 +7,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,6 +14,15 @@ import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
+
+import java.io.ByteArrayInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import static org.mockito.Mockito.*;
 
 class SeePdfTest {
 
@@ -31,6 +35,10 @@ class SeePdfTest {
   HttpServletRequest request;
   HttpServletResponse response;
   RequestDispatcher requestDispatcher;
+
+  static String willGrantAccess = "00000000";
+  static String downloadable = "00000001";
+  static String notDownloadable = "00000002";
 
   @BeforeAll
   static void setUpClass() throws IOException {
@@ -49,12 +57,36 @@ class SeePdfTest {
 
   @Test
   void whereSendingEmailAllowsAndTracksAccess() throws ServletException, IOException {
-    when(request.getPathInfo()).thenReturn("/docs/willGrantAccess");
+    when(request.getPathInfo()).thenReturn("/docs/" + willGrantAccess);
     Part part = mock(Part.class, RETURNS_DEEP_STUBS);
-    when(part.getName()).thenReturn("id");
+    when(part.getName()).thenReturn("accessor");
     when(part.getInputStream())
         .thenReturn(new ByteArrayInputStream("email@example.com".getBytes()));
-    when(request.getPart("id")).thenReturn(part);
+    when(request.getPart("accessor")).thenReturn(part);
+    sut.doPost(request, response);
+    verify(accessReporter).info("access: test.pdf; by: email@example.com; utm_content: test;");
+  }
+
+  @Test
+  void whereDownloadingIsTracked() throws ServletException, IOException {
+    when(request.getPathInfo()).thenReturn("/docs/" + notDownloadable + "/download");
+    Part part = mock(Part.class, RETURNS_DEEP_STUBS);
+    when(part.getName()).thenReturn("accessor");
+    when(part.getInputStream())
+        .thenReturn(new ByteArrayInputStream("email@example.com".getBytes()));
+    when(request.getPart("accessor")).thenReturn(part);
+    sut.doPost(request, response);
+    verify(response).sendError(400);
+  }
+
+  @Test
+  void whereDownloadingIsNotPermitted() throws ServletException, IOException {
+    when(request.getPathInfo()).thenReturn("/docs/" + willGrantAccess);
+    Part part = mock(Part.class, RETURNS_DEEP_STUBS);
+    when(part.getName()).thenReturn("accessor");
+    when(part.getInputStream())
+        .thenReturn(new ByteArrayInputStream("email@example.com".getBytes()));
+    when(request.getPart("accessor")).thenReturn(part);
     sut.doPost(request, response);
     verify(accessReporter).info("access: test.pdf; by: email@example.com; utm_content: test;");
   }
@@ -70,9 +102,13 @@ class SeePdfTest {
 
     try (PrintWriter accessWriter =
             new PrintWriter(
-                new FileOutputStream(sharedTempDir.resolve("willGrantAccess.yaml").toFile()));
-        PrintWriter expiredWriter =
-            new PrintWriter(new FileOutputStream(sharedTempDir.resolve("expired.yaml").toFile()))) {
+                new FileOutputStream(sharedTempDir.resolve(willGrantAccess + ".yaml").toFile()));
+        PrintWriter downloadableWriter =
+            new PrintWriter(
+                new FileOutputStream(sharedTempDir.resolve(downloadable + ".yaml").toFile()));
+        PrintWriter notDownloadableWriter =
+            new PrintWriter(
+                new FileOutputStream(sharedTempDir.resolve(notDownloadable + ".yaml").toFile()))) {
       yaml.dump(
           new AccessRule(
               "test.pdf",
@@ -81,7 +117,11 @@ class SeePdfTest {
               "yours truly",
               false),
           accessWriter);
-      yaml.dump(new AccessRule("test.pdf", -1, null, null, false), expiredWriter);
+      yaml.dump(
+          new AccessRule(
+              "test.pdf", 1, new UtmParameters(null, null, null, null, "test"), null, true),
+          downloadableWriter);
+      yaml.dump(new AccessRule("test.pdf", 1, null, null, false), notDownloadableWriter);
     }
     Files.createFile(sharedTempDir.resolve("test.pdf"));
   }

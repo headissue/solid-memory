@@ -1,8 +1,12 @@
 package com.headissue.servlet;
 
+import static java.lang.String.format;
+
 import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.helper.StringHelpers;
+import com.github.jknack.handlebars.internal.lang3.StringUtils;
 import com.github.jknack.handlebars.io.ClassPathTemplateLoader;
+import com.headissue.config.NanoIdConfig;
 import com.headissue.domain.AccessRule;
 import com.headissue.domain.UtmParameters;
 import jakarta.servlet.ServletException;
@@ -10,9 +14,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -33,12 +35,12 @@ public class TemplateRendering extends HttpServlet {
 
   private static final Logger logger = LoggerFactory.getLogger(TemplateRendering.class);
   private final File directory;
-  private final Logger accessReporter;
+  private final Logger pdfLogger;
   private final Yaml yaml;
 
-  public TemplateRendering(File directory, Logger accessReporter, Yaml yaml) {
+  public TemplateRendering(File directory, Logger pdfLogger, Yaml yaml) {
     this.directory = directory;
-    this.accessReporter = accessReporter;
+    this.pdfLogger = pdfLogger;
     this.yaml = yaml;
   }
 
@@ -84,31 +86,53 @@ public class TemplateRendering extends HttpServlet {
       resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
       return;
     }
+    String accessId =
+        StringUtils.left(req.getPathInfo().substring("/docs/".length()), NanoIdConfig.length);
+    Path accessYaml = Paths.get(directory.getPath(), Path.of(accessId).getFileName() + ".yaml");
+    checkExistenceAndExpiry(accessId, accessYaml);
+    AccessRule accessRule = yaml.loadAs(new FileInputStream(accessYaml.toFile()), AccessRule.class);
+    Path pdfPath = Paths.get(directory.getPath(), accessRule.getFileName());
 
-    String key = "id";
+    String key = "accessor";
     boolean noParameter = isMissingRequiredParameter(req, key);
     if (noParameter) {
       resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
       return;
     }
-    String accessId = req.getPathInfo().substring("/".length());
-    Path accessYaml = Paths.get(directory.getPath(), Path.of(accessId).getFileName() + ".yaml");
 
-    checkExistenceAndExpiry(accessId, accessYaml);
-
-    AccessRule accessRule = yaml.loadAs(new FileInputStream(accessYaml.toFile()), AccessRule.class);
-    String visitor =
+    String accessor =
         new String(req.getPart(key).getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-    reportAccess(accessRule, visitor);
+
+    if (pathInfo.matches(format(".*.{%d}/download$", NanoIdConfig.length))) {
+      if (!accessRule.isPermitDownload()) {
+        resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+        return;
+      }
+
+      report(accessRule, accessor, "download: ");
+
+      byte[] buffer = new byte[1024];
+      try (InputStream in = Files.newInputStream(pdfPath)) {
+        OutputStream output = resp.getOutputStream();
+        for (int length; (length = in.read(buffer)) > 0; ) {
+          output.write(buffer, 0, length);
+        }
+      }
+      return;
+    }
+
+    report(accessRule, accessor, "access: ");
 
     resp.setContentType(MimeTypes.Type.TEXT_HTML_UTF_8.asString());
-    byte[] bytes = Files.readAllBytes(Paths.get(directory.getPath(), accessRule.getFileName()));
+    byte[] bytes = Files.readAllBytes(pdfPath);
     byte[] encoded = java.util.Base64.getEncoder().encode(bytes);
     String base64Pdf = new String(encoded);
 
     handlebars
         .compile("docs/showDoc.hbs")
-        .apply(Map.of("base64Pdf", base64Pdf, "accessRule", accessRule), resp.getWriter());
+        .apply(
+            Map.of("base64Pdf", base64Pdf, "accessRule", accessRule, "id", accessId, "accessor", accessor),
+            resp.getWriter());
   }
 
   private void checkExistenceAndExpiry(String accessId, Path accessYaml) throws IOException {
@@ -120,10 +144,10 @@ public class TemplateRendering extends HttpServlet {
     }
   }
 
-  private void reportAccess(AccessRule accessRule, String visitor) {
+  private void report(AccessRule accessRule, String accessor, String type) {
     StringBuilder sb = new StringBuilder();
-    sb.append("access: ").append(accessRule.getFileName()).append("; ");
-    sb.append("by: ").append(visitor).append("; ");
+    sb.append(type).append(accessRule.getFileName()).append("; ");
+    sb.append("by: ").append(accessor).append("; ");
     UtmParameters utmParameters = accessRule.getUtmParameters();
     if (utmParameters != null) {
       String content = utmParameters.getContent();
@@ -147,7 +171,7 @@ public class TemplateRendering extends HttpServlet {
         sb.append("utm_term: ").append(term).append("; ");
       }
     }
-    accessReporter.info(sb.toString().trim());
+    pdfLogger.info(sb.toString().trim());
   }
 
   private static boolean isMissingRequiredParameter(HttpServletRequest req, String key) {

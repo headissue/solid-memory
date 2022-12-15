@@ -28,15 +28,10 @@
         Next
     {{/ atom/button.hbs }}
     {{#if accessRule.permitDownload}}
-        {{#> atom/buttonLink.hbs
-                href=(format "%s%s" "data:application/pdf;base64,"  base64Pdf)
-                downloadFile="doc.pdf"}}
-            Download
-        {{/ atom/buttonLink.hbs }}
+        {{> organism/pdfDownload.hbs}}
     {{/if}}
 </header>
 <main>
-
     <div style="width: 98%; margin: 0; padding: 1%; background: #c7c7c7; padding-top:3em">
         <canvas style="width: 100%" id="the-canvas"></canvas>
     </div>
