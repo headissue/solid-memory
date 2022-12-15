@@ -1,5 +1,8 @@
 package com.headissue.servlet;
 
+import static org.mockito.Mockito.*;
+
+import com.github.jknack.handlebars.Handlebars;
 import com.headissue.domain.AccessRule;
 import com.headissue.domain.UtmParameters;
 import jakarta.servlet.RequestDispatcher;
@@ -7,6 +10,12 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
+import java.io.ByteArrayInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,22 +24,13 @@ import org.slf4j.Logger;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
-import java.io.ByteArrayInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
-import static org.mockito.Mockito.*;
-
 class SeePdfTest {
 
   @TempDir static Path sharedTempDir;
 
   Logger accessReporter;
 
-  TemplateRendering sut;
+  SeePdfs sut;
 
   HttpServletRequest request;
   HttpServletResponse response;
@@ -51,13 +51,14 @@ class SeePdfTest {
     requestDispatcher = mock(RequestDispatcher.class, RETURNS_DEEP_STUBS);
     response = mock(HttpServletResponse.class, RETURNS_DEEP_STUBS);
     accessReporter = mock(Logger.class, RETURNS_DEEP_STUBS);
-    sut = new TemplateRendering(sharedTempDir.toFile(), accessReporter, new Yaml());
+    Handlebars handlebars = mock(Handlebars.class, RETURNS_DEEP_STUBS);
+    sut = new SeePdfs(sharedTempDir.toFile(), handlebars, accessReporter, new Yaml());
     when(request.getRequestDispatcher(anyString())).thenReturn(requestDispatcher);
   }
 
   @Test
   void whereSendingEmailAllowsAndTracksAccess() throws ServletException, IOException {
-    when(request.getPathInfo()).thenReturn("/docs/" + willGrantAccess);
+    when(request.getPathInfo()).thenReturn("/" + willGrantAccess);
     Part part = mock(Part.class, RETURNS_DEEP_STUBS);
     when(part.getName()).thenReturn("accessor");
     when(part.getInputStream())
@@ -69,7 +70,7 @@ class SeePdfTest {
 
   @Test
   void whereDownloadingIsTracked() throws ServletException, IOException {
-    when(request.getPathInfo()).thenReturn("/docs/" + notDownloadable + "/download");
+    when(request.getPathInfo()).thenReturn("/" + notDownloadable + "/download");
     Part part = mock(Part.class, RETURNS_DEEP_STUBS);
     when(part.getName()).thenReturn("accessor");
     when(part.getInputStream())
@@ -81,7 +82,7 @@ class SeePdfTest {
 
   @Test
   void whereDownloadingIsNotPermitted() throws ServletException, IOException {
-    when(request.getPathInfo()).thenReturn("/docs/" + willGrantAccess);
+    when(request.getPathInfo()).thenReturn("/" + willGrantAccess);
     Part part = mock(Part.class, RETURNS_DEEP_STUBS);
     when(part.getName()).thenReturn("accessor");
     when(part.getInputStream())

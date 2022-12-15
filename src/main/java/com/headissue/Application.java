@@ -2,6 +2,9 @@ package com.headissue;
 
 import static org.eclipse.jetty.servlet.ServletContextHandler.NO_SESSIONS;
 
+import com.github.jknack.handlebars.Handlebars;
+import com.github.jknack.handlebars.helper.StringHelpers;
+import com.github.jknack.handlebars.io.ClassPathTemplateLoader;
 import com.headissue.domain.AccessRule;
 import com.headissue.service.TestDataService;
 import com.headissue.servlet.ServletHandlerBuilder;
@@ -34,6 +37,14 @@ public class Application {
   private static int port;
 
   public static final Yaml yaml;
+
+  private static final Handlebars handlebars;
+
+  static {
+    handlebars = new Handlebars(new ClassPathTemplateLoader("/static", ""));
+    StringHelpers stringFormat = StringHelpers.stringFormat;
+    handlebars.registerHelper("format", stringFormat);
+  }
 
   static {
     DumperOptions options = new DumperOptions();
@@ -81,7 +92,8 @@ public class Application {
     ServletHandlerBuilder builder = new ServletHandlerBuilder(servletContextHandler);
     builder.addForwardIdToDocumentFilter();
     builder.addPdfUpload(directory);
-    builder.addTemplateRenderingAndStaticResources(directory);
+    builder.addTemplateRenderingAndStaticResources(handlebars);
+    builder.addSeePdfs(directory, handlebars);
     return builder.getServletHandler();
   }
 

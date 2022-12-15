@@ -1,5 +1,6 @@
 package com.headissue.servlet;
 
+import com.github.jknack.handlebars.Handlebars;
 import com.headissue.Application;
 import com.headissue.filter.DocumentIdForwardingFilter;
 import jakarta.servlet.*;
@@ -36,19 +37,29 @@ public class ServletHandlerBuilder {
     servletHandler.addFilter(docIdFilter, "/*", EnumSet.of(DispatcherType.REQUEST));
   }
 
-  public void addTemplateRenderingAndStaticResources(File directory) {
-    TemplateRendering templateRendering =
-        new TemplateRendering(directory, LoggerFactory.getLogger("pdf"), Application.yaml);
-    ServletRegistration.Dynamic servePdf =
+  public void addTemplateRenderingAndStaticResources(Handlebars handlebars) {
+    TemplateRendering templateRendering = new TemplateRendering(handlebars);
+    ServletRegistration.Dynamic renderTemplate =
         servletHandler.getServletContext().addServlet("handlebars", templateRendering);
-    servePdf.addMapping("/*");
-    servePdf.setMultipartConfig(
-        new MultipartConfigElement(directory.getPath(), 1024 * 1024 * 10, 1024 * 1024 * 10, 0));
+    renderTemplate.addMapping("/*");
 
     ResourceService resourceService = new ResourceService();
     DefaultServlet defaultServlet = new DefaultServlet(resourceService);
     servletHandler.addServlet(new ServletHolder("static/img", defaultServlet), "/img/*");
     servletHandler.addServlet(new ServletHolder("static/css", defaultServlet), "/css/*");
     servletHandler.addServlet(new ServletHolder("static/js", defaultServlet), "/js/*");
+  }
+
+  public void addSeePdfs(File directory, Handlebars handlebars) {
+    ServletRegistration.Dynamic seePdfs =
+        servletHandler
+            .getServletContext()
+            .addServlet(
+                "seePdfs",
+                new SeePdfs(
+                    directory, handlebars, LoggerFactory.getLogger("pdf"), Application.yaml));
+    seePdfs.addMapping("/docs/*");
+    seePdfs.setMultipartConfig(
+        new MultipartConfigElement(directory.getPath(), 1024 * 1024 * 10, 1024 * 1024 * 10, 0));
   }
 }
