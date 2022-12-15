@@ -12,14 +12,21 @@ public class AccessRule {
   private Integer ttlDays;
   private UtmParameters utmParameters;
   private String owner;
+  private boolean permitDownload;
 
   public AccessRule() {}
 
-  public AccessRule(String fileName, Integer ttlDays, UtmParameters utmParameters, String owner) {
+  public AccessRule(
+      String fileName,
+      Integer ttlDays,
+      UtmParameters utmParameters,
+      String owner,
+      boolean permitDownload) {
     this.fileName = fileName;
     this.ttlDays = ttlDays;
     this.utmParameters = utmParameters;
     this.owner = owner;
+    this.permitDownload = permitDownload;
   }
 
   public String getFileName() {
@@ -54,6 +61,14 @@ public class AccessRule {
     this.owner = owner;
   }
 
+  public boolean isPermitDownload() {
+    return permitDownload;
+  }
+
+  public void setPermitDownload(boolean permitDownload) {
+    this.permitDownload = permitDownload;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -61,6 +76,7 @@ public class AccessRule {
 
     AccessRule that = (AccessRule) o;
 
+    if (permitDownload != that.permitDownload) return false;
     if (!Objects.equals(fileName, that.fileName)) return false;
     if (!Objects.equals(ttlDays, that.ttlDays)) return false;
     if (!Objects.equals(utmParameters, that.utmParameters)) return false;
@@ -73,6 +89,7 @@ public class AccessRule {
     result = 31 * result + (ttlDays != null ? ttlDays.hashCode() : 0);
     result = 31 * result + (utmParameters != null ? utmParameters.hashCode() : 0);
     result = 31 * result + (owner != null ? owner.hashCode() : 0);
+    result = 31 * result + (permitDownload ? 1 : 0);
     return result;
   }
 

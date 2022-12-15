@@ -11,11 +11,12 @@
 - [x] footer with link to privacy bla
 - [ ] actually create that privacy vla page
 - [x] move Previous / Next to the right. "Page 1 / 4 Previous Next"
-- [x] Owner field: Please enter your email to continue. Add "Your data will only be shared with John Doe".
-Doc needs an owner field.
+- [x] Owner field: Please enter your email to continue. Add "Your data will only be shared with John Doe". 
+- [x] optional download button
 
+logging download
 
-optional download button, with logging download
+expired link -> please contact ${owner} to get a new one
 
 ## Prio C
 

@@ -1,5 +1,6 @@
 package com.headissue.feature.steps;
 
+import static com.headissue.feature.Page.downloadButton;
 import static org.openqa.selenium.By.cssSelector;
 
 import java.util.Objects;
@@ -16,7 +17,7 @@ public class When {
   }
 
   public void theyOpenTheTestPdfWithoutProvidingId() {
-    driver.get("http://localhost:8080/docs/00000000");
+    driver.get("http://localhost:8080/00000000");
   }
 
   public void theySubmitAnEmail() {
@@ -35,5 +36,14 @@ public class When {
 
   public void theyClickTheShareLink() {
     driver.findElement(By.cssSelector("#access")).click();
+  }
+
+  public void theyOpenTheDownloadableTestPdfSuccessfully() {
+    driver.get("http://localhost:8080/00000001");
+    theySubmitAnEmail();
+  }
+
+  public void theyDownloadIt() {
+    driver.findElement(downloadButton).click();
   }
 }

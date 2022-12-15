@@ -25,7 +25,8 @@ class AccessRuleTest {
             "test.pdf",
             365 * 100,
             new UtmParameters("source", "medium", "campaign", "term", "content"),
-            "yours truly");
+            "yours truly",
+            false);
     File file = sharedTempDir.resolve("equals.yaml").toFile();
     try (PrintWriter p = new PrintWriter(new FileOutputStream(file))) {
       Application.yaml.dump(accessRule, p);
@@ -39,7 +40,7 @@ class AccessRuleTest {
   void whereNullableFieldsAreAndNotWrittenToFile() throws IOException {
     AccessRule accessRule =
         new AccessRule(
-            "test.pdf", null, new UtmParameters(null, null, "conference", null, null), null);
+            "test.pdf", null, new UtmParameters(null, null, "conference", null, null), null, false);
     File file = sharedTempDir.resolve("optional.yaml").toFile();
     try (PrintWriter p = new PrintWriter(new FileOutputStream(file))) {
       Application.yaml.dump(accessRule, p);
@@ -56,7 +57,7 @@ class AccessRuleTest {
 
   @Test
   void whereTtlIsOptionalAndNotWrittenToFile() throws IOException {
-    AccessRule accessRule = new AccessRule("test.pdf", null, null, null);
+    AccessRule accessRule = new AccessRule("test.pdf", null, null, null, false);
     File file = sharedTempDir.resolve("optional.yaml").toFile();
     try (PrintWriter p = new PrintWriter(new FileOutputStream(file))) {
       Application.yaml.dump(accessRule, p);

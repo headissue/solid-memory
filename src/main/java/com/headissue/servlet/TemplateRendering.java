@@ -1,6 +1,7 @@
 package com.headissue.servlet;
 
 import com.github.jknack.handlebars.Handlebars;
+import com.github.jknack.handlebars.helper.StringHelpers;
 import com.github.jknack.handlebars.io.ClassPathTemplateLoader;
 import com.headissue.domain.AccessRule;
 import com.headissue.domain.UtmParameters;
@@ -41,8 +42,13 @@ public class TemplateRendering extends HttpServlet {
     this.yaml = yaml;
   }
 
-  private static final Handlebars handlebars =
-      new Handlebars(new ClassPathTemplateLoader("/static", ""));
+  private static final Handlebars handlebars;
+
+  static {
+    handlebars = new Handlebars(new ClassPathTemplateLoader("/static", ""));
+    StringHelpers stringFormat = StringHelpers.stringFormat;
+    handlebars.registerHelper("format", stringFormat);
+  }
 
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -100,7 +106,9 @@ public class TemplateRendering extends HttpServlet {
     byte[] encoded = java.util.Base64.getEncoder().encode(bytes);
     String base64Pdf = new String(encoded);
 
-    handlebars.compile("docs/showDoc.hbs").apply(Map.of("base64Pdf", base64Pdf), resp.getWriter());
+    handlebars
+        .compile("docs/showDoc.hbs")
+        .apply(Map.of("base64Pdf", base64Pdf, "accessRule", accessRule), resp.getWriter());
   }
 
   private void checkExistenceAndExpiry(String accessId, Path accessYaml) throws IOException {

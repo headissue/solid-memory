@@ -4,17 +4,22 @@ import com.headissue.feature.ApplicationServerExtension;
 import com.headissue.feature.steps.Given;
 import com.headissue.feature.steps.Then;
 import com.headissue.feature.steps.When;
+import java.nio.file.Path;
+import java.util.HashMap;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 
 @ExtendWith(ApplicationServerExtension.class)
 class AccessIT {
 
+  @TempDir private static Path tempDir;
   private static WebDriver driver;
   private static Given given;
   private static When when;
@@ -22,7 +27,14 @@ class AccessIT {
 
   @BeforeAll
   static void setUpClass() {
-    driver = new ChromeDriver();
+    ChromeOptions chromeOptions = new ChromeOptions();
+    var prefs = new HashMap<String, Object>();
+    prefs.put(
+        "download.default_directory",
+        tempDir.toString()); // Bypass default download directory in Chrome
+    chromeOptions.setExperimentalOption("prefs", prefs);
+
+    driver = new ChromeDriver(chromeOptions);
     driver.get("http://localhost:8080");
     given = new Given(driver);
     when = new When(driver);
@@ -45,5 +57,14 @@ class AccessIT {
     then.theyShouldSeeThatTheirEmailIsNotPartOfTheUrl();
     then.theyShouldSeeThePdfCanvasAndControls();
     then.theyShouldSeeExamplePdfHasTwoPages();
+    then.theyShouldSeeItsNotDownloadable();
+  }
+
+  @Test
+  void wherePdfIsDownloadable() {
+    when.theyOpenTheDownloadableTestPdfSuccessfully();
+    then.theyShouldSeeItsDownloadable();
+    when.theyDownloadIt();
+    then.theyShouldSeeItsDownloaded(tempDir);
   }
 }

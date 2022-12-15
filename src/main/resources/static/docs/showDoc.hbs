@@ -21,8 +21,19 @@
 <body>
 <header>
     <span>Page: <span id="page_num"></span> / <span id="page_count"></span></span>
-    <button id="prev">Previous</button>
-    <button id="next">Next</button>
+    {{#> atom/button.hbs id="prev" }}
+        Previous
+    {{/ atom/button.hbs }}
+    {{#> atom/button.hbs id="next"}}
+        Next
+    {{/ atom/button.hbs }}
+    {{#if accessRule.permitDownload}}
+        {{#> atom/buttonLink.hbs
+                href=(format "%s%s" "data:application/pdf;base64,"  base64Pdf)
+                downloadFile="doc.pdf"}}
+            Download
+        {{/ atom/buttonLink.hbs }}
+    {{/if}}
 </header>
 <main>
 
