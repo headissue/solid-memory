@@ -16,6 +16,10 @@
 - [x] logging download
 - [x] expired link -> please contact ${owner} to get a new one http://localhost:8080/00000002
 
+Additional checkbox: "Send me monthly updates."
+
+The content should not be easily accessed by robots or search engines. Maybe the email address should be checked and a PoW implemented
+
 ## Prio C
 - [x] Preview of first page and popup, after submitting the email address, the scroll function appears
 
