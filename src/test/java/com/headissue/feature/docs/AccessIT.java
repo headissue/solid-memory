@@ -54,7 +54,6 @@ class AccessIT {
     then.theyShouldSeeThatTheirEmailIsNotPartOfTheUrl();
     then.theyShouldSeeThePdfCanvasAndControls();
     then.theyShouldSeeExamplePdfHasTwoPages();
-    then.theyShouldSeeItsNotDownloadable();
   }
 
   @Test

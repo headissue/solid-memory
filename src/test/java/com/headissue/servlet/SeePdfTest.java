@@ -18,7 +18,6 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -105,15 +104,6 @@ class SeePdfTest {
     when(visitor.getName()).thenReturn(key);
     when(visitor.getInputStream()).thenReturn(new ByteArrayInputStream(value.getBytes()));
     return visitor;
-  }
-
-  @Test
-  void whereDownloadingIsNotPermitted() throws ServletException, IOException {
-    when(request.getPathInfo()).thenReturn("/" + notDownloadable + "/download");
-    Part part = buildPart("visitor", "email@example.com");
-    when(request.getPart("visitor")).thenReturn(part);
-    sut.doPost(request, response);
-    verify(response).sendError(400);
   }
 
   @Test

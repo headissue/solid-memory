@@ -39,7 +39,7 @@ public class SeePdfs extends HttpServlet {
 
   private final Logger pdfLogger;
   private final Yaml yaml;
-  private FormKeyService formKeyService;
+  private final FormKeyService formKeyService;
 
   public SeePdfs(
       File directory,
@@ -125,10 +125,6 @@ public class SeePdfs extends HttpServlet {
     String visitor = readPart(req.getPart(visitorPartKey));
 
     if (pathInfo.matches(format(".*.{%d}/download$", NanoIdConfig.length))) {
-      if (!accessRule.isPermitDownload()) {
-        resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
-        return;
-      }
 
       reportDownload(accessRule, visitor);
 
@@ -164,7 +160,9 @@ public class SeePdfs extends HttpServlet {
                 "id",
                 accessId,
                 "visitor",
-                visitor),
+                visitor,
+                "formKey",
+                formKeyService.getFormKey()),
             resp.getWriter());
   }
 

@@ -18,7 +18,7 @@
 - [x] Additional checkbox: "Send me monthly updates."
 - [x] only set form action when email is entered to prevent 🤷
 - [x] set and validate form key
-- [ ] download always allowed
+- [x] download always allowed
 
 
 The content should not be easily accessed by robots or search engines. Maybe the email address should be checked and a PoW implemented

@@ -3,4 +3,8 @@
         Download
     </button>
     <input type="hidden" name="visitor" value="{{visitor}}">
+    {{#if formKey}}
+        <input type="hidden" name="key" value="{{formKey.key}}">
+        <input type="hidden" name="hash" value="{{formKey.hash}}">
+    {{/if}}
 </form>
