@@ -8,6 +8,7 @@ import com.github.jknack.handlebars.internal.lang3.StringUtils;
 import com.headissue.config.NanoIdConfig;
 import com.headissue.domain.AccessRule;
 import com.headissue.domain.UtmParameters;
+import com.headissue.service.FormKeyService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -38,12 +39,19 @@ public class SeePdfs extends HttpServlet {
 
   private final Logger pdfLogger;
   private final Yaml yaml;
+  private FormKeyService formKeyService;
 
-  public SeePdfs(File directory, Handlebars handlebars, Logger pdfLogger, Yaml yaml) {
+  public SeePdfs(
+      File directory,
+      Handlebars handlebars,
+      Logger pdfLogger,
+      Yaml yaml,
+      FormKeyService formKeyService) {
     this.directory = directory;
     this.handlebars = handlebars;
     this.pdfLogger = pdfLogger;
     this.yaml = yaml;
+    this.formKeyService = formKeyService;
   }
 
   @Override
@@ -72,7 +80,15 @@ public class SeePdfs extends HttpServlet {
     handlebars
         .compile("docs/preview.hbs")
         .apply(
-            Map.of("id", accessId, "accessRule", accessRule, "base64Pdf", base64Pdf),
+            Map.of(
+                "id",
+                accessId,
+                "accessRule",
+                accessRule,
+                "base64Pdf",
+                base64Pdf,
+                "formKey",
+                formKeyService.getFormKey()),
             resp.getWriter());
   }
 
@@ -88,14 +104,25 @@ public class SeePdfs extends HttpServlet {
     AccessRule accessRule = yaml.loadAs(new FileInputStream(accessYaml.toFile()), AccessRule.class);
     Path pdfPath = Paths.get(directory.getPath(), accessRule.getFileName());
 
-    String key = "visitor";
-    boolean noVisitorPart = isMissingRequiredPart(req, key);
-    if (noVisitorPart) {
+    String visitorPartKey = "visitor";
+    String formKey = "key";
+    String formKeyHash = "hash";
+    if (isMissingRequiredParts(req, visitorPartKey, formKey, formKeyHash)) {
+      resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+      return;
+    }
+    if (!formKeyService.isValid(
+        readPart(req.getPart(formKeyHash)), readPart(req.getPart(formKey)))) {
       resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
       return;
     }
 
-    String visitor = new String(req.getPart(key).getInputStream().readAllBytes(), UTF_8);
+    if (isMissingRequiredParts(req, visitorPartKey)) {
+      resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+      return;
+    }
+
+    String visitor = readPart(req.getPart(visitorPartKey));
 
     if (pathInfo.matches(format(".*.{%d}/download$", NanoIdConfig.length))) {
       if (!accessRule.isPermitDownload()) {
@@ -117,8 +144,7 @@ public class SeePdfs extends HttpServlet {
     Part consentToMonthlyUpdatesPart = req.getPart("consentToMonthlyUpdates");
     Boolean consentToMonthlyUpdates =
         consentToMonthlyUpdatesPart != null
-            && Boolean.parseBoolean(
-                new String(consentToMonthlyUpdatesPart.getInputStream().readAllBytes(), UTF_8));
+            && Boolean.parseBoolean(readPart(consentToMonthlyUpdatesPart));
 
     report(accessRule, visitor, "access: ", consentToMonthlyUpdates);
 
@@ -142,20 +168,29 @@ public class SeePdfs extends HttpServlet {
             resp.getWriter());
   }
 
-  private static boolean isMissingRequiredPart(HttpServletRequest req, String key) {
+  private static String readPart(Part req) throws IOException {
+    return new String(req.getInputStream().readAllBytes(), UTF_8);
+  }
+
+  private static boolean isMissingRequiredParts(HttpServletRequest req, String... keys) {
     Collection<Part> parts;
     try {
       parts = req.getParts();
       if (parts.isEmpty()) {
         return true;
       }
-      return req.getPart(key) == null;
+      for (String key : keys) {
+        if (req.getPart(key) == null) {
+          return true;
+        }
+      }
     } catch (IOException e) {
       logger.error("exception getting Part", e);
       return true;
     } catch (ServletException e) {
       throw new RuntimeException(e);
     }
+    return false;
   }
 
   private boolean isExpired(Path accessYaml) throws IOException {

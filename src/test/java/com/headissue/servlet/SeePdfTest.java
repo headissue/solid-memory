@@ -5,6 +5,7 @@ import static org.mockito.Mockito.*;
 import com.github.jknack.handlebars.Handlebars;
 import com.headissue.domain.AccessRule;
 import com.headissue.domain.UtmParameters;
+import com.headissue.service.FormKeyService;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,6 +17,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,13 +49,17 @@ class SeePdfTest {
   }
 
   @BeforeEach
-  void setUp() {
-    request = mock(HttpServletRequest.class, RETURNS_DEEP_STUBS);
+  void setUp() throws ServletException, IOException {
+    request = mock(HttpServletRequest.class);
+    when(request.getParts()).thenReturn(List.of(mock(Part.class)));
     requestDispatcher = mock(RequestDispatcher.class, RETURNS_DEEP_STUBS);
     response = mock(HttpServletResponse.class, RETURNS_DEEP_STUBS);
     accessReporter = mock(Logger.class, RETURNS_DEEP_STUBS);
     Handlebars handlebars = mock(Handlebars.class, RETURNS_DEEP_STUBS);
-    sut = new SeePdfs(sharedTempDir.toFile(), handlebars, accessReporter, new Yaml());
+    FormKeyService formKeyService = mock(FormKeyService.class, RETURNS_DEEP_STUBS);
+    when(formKeyService.isValid(anyString(), anyString())).thenReturn(true);
+    sut =
+        new SeePdfs(sharedTempDir.toFile(), handlebars, accessReporter, new Yaml(), formKeyService);
     when(request.getRequestDispatcher(anyString())).thenReturn(requestDispatcher);
   }
 
@@ -63,10 +70,20 @@ class SeePdfTest {
     when(request.getPart("visitor")).thenReturn(visitorPart);
     Part consentToMonthlyUpdatePart = buildPart("consentToMonthlyUpdates", "false");
     when(request.getPart("consentToMonthlyUpdates")).thenReturn(consentToMonthlyUpdatePart);
+    addFormKeys(request);
+
     sut.doPost(request, response);
     verify(accessReporter)
         .info(
             "access: test.pdf; by: email@example.com; utm_content: test; consentToMonthlyUpdates: false;");
+  }
+
+  private static void addFormKeys(HttpServletRequest request1)
+      throws IOException, ServletException {
+    Part formKeyPart = buildPart("key", "123123123");
+    when(request1.getPart("key")).thenReturn(formKeyPart);
+    Part formKeyHashPart = buildPart("hash", "123123123");
+    when(request1.getPart("hash")).thenReturn(formKeyHashPart);
   }
 
   @Test
@@ -76,6 +93,7 @@ class SeePdfTest {
     when(request.getPart("visitor")).thenReturn(visitorPart);
     Part consentToMonthlyUpdatePart = buildPart("consentToMonthlyUpdates", "true");
     when(request.getPart("consentToMonthlyUpdates")).thenReturn(consentToMonthlyUpdatePart);
+    addFormKeys(request);
     sut.doPost(request, response);
     verify(accessReporter)
         .info(
@@ -99,10 +117,20 @@ class SeePdfTest {
   }
 
   @Test
+  void whereNoFormKeyIsSubmitted() throws ServletException, IOException {
+    when(request.getPathInfo()).thenReturn("/" + willGrantAccess);
+    Part visitorPart = buildPart("visitor", "email@example.com");
+    when(request.getPart("visitor")).thenReturn(visitorPart);
+    sut.doPost(request, response);
+    verify(response).sendError(400);
+  }
+
+  @Test
   void whereDownloadingIsTracked() throws ServletException, IOException {
     when(request.getPathInfo()).thenReturn("/" + downloadable + "/download");
     Part part = buildPart("visitor", "email@example.com");
     when(request.getPart("visitor")).thenReturn(part);
+    addFormKeys(request);
     sut.doPost(request, response);
     verify(accessReporter).info("download: test.pdf; by: email@example.com; utm_content: test;");
   }

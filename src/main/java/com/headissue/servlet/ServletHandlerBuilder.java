@@ -3,6 +3,7 @@ package com.headissue.servlet;
 import com.github.jknack.handlebars.Handlebars;
 import com.headissue.Application;
 import com.headissue.filter.DocumentIdForwardingFilter;
+import com.headissue.service.FormKeyService;
 import jakarta.servlet.*;
 import java.io.File;
 import java.util.*;
@@ -57,7 +58,11 @@ public class ServletHandlerBuilder {
             .addServlet(
                 "seePdfs",
                 new SeePdfs(
-                    directory, handlebars, LoggerFactory.getLogger("pdf"), Application.yaml));
+                    directory,
+                    handlebars,
+                    LoggerFactory.getLogger("pdf"),
+                    Application.yaml,
+                    new FormKeyService()));
     seePdfs.addMapping("/docs/*");
     seePdfs.setMultipartConfig(
         new MultipartConfigElement(directory.getPath(), 1024 * 1024 * 10, 1024 * 1024 * 10, 0));

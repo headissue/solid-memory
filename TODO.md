@@ -16,7 +16,11 @@
 - [x] logging download
 - [x] expired link -> please contact ${owner} to get a new one http://localhost:8080/00000002
 - [x] Additional checkbox: "Send me monthly updates."
+- [x] only set form action when email is entered to prevent 🤷
+- [x] set and validate form key
 - [ ] download always allowed
+
+
 The content should not be easily accessed by robots or search engines. Maybe the email address should be checked and a PoW implemented
 
 ## Prio C

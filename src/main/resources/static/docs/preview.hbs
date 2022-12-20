@@ -50,11 +50,11 @@
                     {{/if}}
                 {{/with}}
             </p>
-            <form method="post" enctype="multipart/form-data" action="/{{ id }}">
+            <form method="post" enctype="multipart/form-data">
                 <fieldset>
                     <label>
                         E-Mail:
-                        <input type="email" name="visitor">
+                        <input type="email" name="visitor" onchange="document.getElementsByTagName('form')[0].action='/{{ id }}'">
                     </label>
                 </fieldset>
                 <fieldset>
@@ -63,6 +63,10 @@
                         Send me monthly updates
                     </label>
                 </fieldset>
+                {{#if formKey}}
+                    <input type="hidden" name="key" value="{{formKey.key}}">
+                    <input type="hidden" name="hash" value="{{formKey.hash}}">
+                {{/if}}
                 <button type="submit">GO!</button>
             </form>
         </div>
