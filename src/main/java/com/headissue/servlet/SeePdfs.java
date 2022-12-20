@@ -1,6 +1,7 @@
 package com.headissue.servlet;
 
 import static java.lang.String.format;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.internal.lang3.StringUtils;
@@ -13,7 +14,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -69,10 +69,11 @@ public class SeePdfs extends HttpServlet {
     byte[] encoded = java.util.Base64.getEncoder().encode(bytes);
     String base64Pdf = new String(encoded);
 
-
     handlebars
-        .compile("docs/preDocCaptureEmail.hbs")
-        .apply(Map.of("id", accessId, "accessRule", accessRule, "base64Pdf", base64Pdf), resp.getWriter());
+        .compile("docs/preview.hbs")
+        .apply(
+            Map.of("id", accessId, "accessRule", accessRule, "base64Pdf", base64Pdf),
+            resp.getWriter());
   }
 
   @Override
@@ -87,15 +88,14 @@ public class SeePdfs extends HttpServlet {
     AccessRule accessRule = yaml.loadAs(new FileInputStream(accessYaml.toFile()), AccessRule.class);
     Path pdfPath = Paths.get(directory.getPath(), accessRule.getFileName());
 
-    String key = "accessor";
-    boolean noParameter = isMissingRequiredParameter(req, key);
-    if (noParameter) {
+    String key = "visitor";
+    boolean noVisitorPart = isMissingRequiredPart(req, key);
+    if (noVisitorPart) {
       resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
       return;
     }
 
-    String accessor =
-        new String(req.getPart(key).getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+    String visitor = new String(req.getPart(key).getInputStream().readAllBytes(), UTF_8);
 
     if (pathInfo.matches(format(".*.{%d}/download$", NanoIdConfig.length))) {
       if (!accessRule.isPermitDownload()) {
@@ -103,7 +103,7 @@ public class SeePdfs extends HttpServlet {
         return;
       }
 
-      report(accessRule, accessor, "download: ");
+      reportDownload(accessRule, visitor);
 
       byte[] buffer = new byte[1024];
       try (InputStream in = Files.newInputStream(pdfPath)) {
@@ -114,8 +114,13 @@ public class SeePdfs extends HttpServlet {
       }
       return;
     }
+    Part consentToMonthlyUpdatesPart = req.getPart("consentToMonthlyUpdates");
+    Boolean consentToMonthlyUpdates =
+        consentToMonthlyUpdatesPart != null
+            && Boolean.parseBoolean(
+                new String(consentToMonthlyUpdatesPart.getInputStream().readAllBytes(), UTF_8));
 
-    report(accessRule, accessor, "access: ");
+    report(accessRule, visitor, "access: ", consentToMonthlyUpdates);
 
     resp.setContentType(MimeTypes.Type.TEXT_HTML_UTF_8.asString());
     byte[] bytes = Files.readAllBytes(pdfPath);
@@ -132,12 +137,12 @@ public class SeePdfs extends HttpServlet {
                 accessRule,
                 "id",
                 accessId,
-                "accessor",
-                accessor),
+                "visitor",
+                visitor),
             resp.getWriter());
   }
 
-  private static boolean isMissingRequiredParameter(HttpServletRequest req, String key) {
+  private static boolean isMissingRequiredPart(HttpServletRequest req, String key) {
     Collection<Part> parts;
     try {
       parts = req.getParts();
@@ -168,10 +173,15 @@ public class SeePdfs extends HttpServlet {
     return ttl.isBefore(now);
   }
 
-  private void report(AccessRule accessRule, String accessor, String type) {
+  private void reportDownload(AccessRule accessRule, String visitor) {
+    report(accessRule, visitor, "download: ", null);
+  }
+
+  private void report(
+      AccessRule accessRule, String visitor, String type, Boolean consentToMonthlyUpdates) {
     StringBuilder sb = new StringBuilder();
     sb.append(type).append(accessRule.getFileName()).append("; ");
-    sb.append("by: ").append(accessor).append("; ");
+    sb.append("by: ").append(visitor).append("; ");
     UtmParameters utmParameters = accessRule.getUtmParameters();
     if (utmParameters != null) {
       String content = utmParameters.getContent();
@@ -194,6 +204,9 @@ public class SeePdfs extends HttpServlet {
       if (term != null) {
         sb.append("utm_term: ").append(term).append("; ");
       }
+    }
+    if (consentToMonthlyUpdates != null) {
+      sb.append("consentToMonthlyUpdates: ").append(consentToMonthlyUpdates).append("; ");
     }
     pdfLogger.info(sb.toString().trim());
   }

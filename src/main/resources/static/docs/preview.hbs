@@ -7,14 +7,24 @@
     <style>
         #id-form {
             display: block;
-            margin: 1rem auto 1rem auto;
+            margin: 0 auto 1rem auto;
+            padding: 0 0.5rem;
             max-width: 600px;
-            padding: 1em;
             -webkit-transition: opacity 0.2s 0.2s ease;
             -moz-transition: opacity 0.2s 0.2s ease;
             -o-transition: opacity 0.2s 0.2s ease;
             transition: opacity 0.2s 0.2s ease;
             opacity: 0;
+        }
+
+        #id-form form {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        #id-form form fieldset {
+            border: none;
         }
     </style>
 </head>
@@ -22,7 +32,7 @@
 <main>
     <div id="id-form">
         <p>
-            Please enter your email to get access.
+            Please enter your email to get access to the full document.
             {{#with accessRule}}
                 {{#if owner }}
                     Your data will only be shared with {{owner}}.
@@ -30,10 +40,20 @@
             {{/with}}
         </p>
         <form method="post" enctype="multipart/form-data" action="/{{ id }}">
-            <label>
-                email:
-                <input type="email" name="accessor">
-            </label>
+            <fieldset>
+                <legend>required</legend>
+                <label>
+                    E-Mail:
+                    <input type="email" name="visitor">
+                </label>
+            </fieldset>
+            <fieldset>
+                <legend>optional</legend>
+                <label>
+                    <input type="checkbox" name="consentToMonthlyUpdates" value="true">
+                    Please send me monthly updates
+                </label>
+            </fieldset>
             <button type="submit">SEND</button>
         </form>
     </div>

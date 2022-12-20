@@ -15,8 +15,7 @@
 - [x] optional download button see http://localhost:8080/00000001
 - [x] logging download
 - [x] expired link -> please contact ${owner} to get a new one http://localhost:8080/00000002
-
-Additional checkbox: "Send me monthly updates."
+- [x] Additional checkbox: "Send me monthly updates."
 
 The content should not be easily accessed by robots or search engines. Maybe the email address should be checked and a PoW implemented
 

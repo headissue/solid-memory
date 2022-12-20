@@ -59,37 +59,52 @@ class SeePdfTest {
   @Test
   void whereSendingEmailAllowsAndTracksAccess() throws ServletException, IOException {
     when(request.getPathInfo()).thenReturn("/" + willGrantAccess);
-    Part part = mock(Part.class, RETURNS_DEEP_STUBS);
-    when(part.getName()).thenReturn("accessor");
-    when(part.getInputStream())
-        .thenReturn(new ByteArrayInputStream("email@example.com".getBytes()));
-    when(request.getPart("accessor")).thenReturn(part);
+    Part visitorPart = buildPart("visitor", "email@example.com");
+    when(request.getPart("visitor")).thenReturn(visitorPart);
+    Part consentToMonthlyUpdatePart = buildPart("consentToMonthlyUpdates", "false");
+    when(request.getPart("consentToMonthlyUpdates")).thenReturn(consentToMonthlyUpdatePart);
     sut.doPost(request, response);
-    verify(accessReporter).info("access: test.pdf; by: email@example.com; utm_content: test;");
+    verify(accessReporter)
+        .info(
+            "access: test.pdf; by: email@example.com; utm_content: test; consentToMonthlyUpdates: false;");
   }
 
   @Test
-  void whereDownloadingIsTracked() throws ServletException, IOException {
+  void whereOptionalConsentToUpdateIsSend() throws ServletException, IOException {
+    when(request.getPathInfo()).thenReturn("/" + willGrantAccess);
+    Part visitorPart = buildPart("visitor", "email@example.com");
+    when(request.getPart("visitor")).thenReturn(visitorPart);
+    Part consentToMonthlyUpdatePart = buildPart("consentToMonthlyUpdates", "true");
+    when(request.getPart("consentToMonthlyUpdates")).thenReturn(consentToMonthlyUpdatePart);
+    sut.doPost(request, response);
+    verify(accessReporter)
+        .info(
+            "access: test.pdf; by: email@example.com; utm_content: test; consentToMonthlyUpdates: true;");
+  }
+
+  private static Part buildPart(String key, String value) throws IOException {
+    Part visitor = mock(Part.class, RETURNS_DEEP_STUBS);
+    when(visitor.getName()).thenReturn(key);
+    when(visitor.getInputStream()).thenReturn(new ByteArrayInputStream(value.getBytes()));
+    return visitor;
+  }
+
+  @Test
+  void whereDownloadingIsNotPermitted() throws ServletException, IOException {
     when(request.getPathInfo()).thenReturn("/" + notDownloadable + "/download");
-    Part part = mock(Part.class, RETURNS_DEEP_STUBS);
-    when(part.getName()).thenReturn("accessor");
-    when(part.getInputStream())
-        .thenReturn(new ByteArrayInputStream("email@example.com".getBytes()));
-    when(request.getPart("accessor")).thenReturn(part);
+    Part part = buildPart("visitor", "email@example.com");
+    when(request.getPart("visitor")).thenReturn(part);
     sut.doPost(request, response);
     verify(response).sendError(400);
   }
 
   @Test
-  void whereDownloadingIsNotPermitted() throws ServletException, IOException {
-    when(request.getPathInfo()).thenReturn("/" + willGrantAccess);
-    Part part = mock(Part.class, RETURNS_DEEP_STUBS);
-    when(part.getName()).thenReturn("accessor");
-    when(part.getInputStream())
-        .thenReturn(new ByteArrayInputStream("email@example.com".getBytes()));
-    when(request.getPart("accessor")).thenReturn(part);
+  void whereDownloadingIsTracked() throws ServletException, IOException {
+    when(request.getPathInfo()).thenReturn("/" + downloadable + "/download");
+    Part part = buildPart("visitor", "email@example.com");
+    when(request.getPart("visitor")).thenReturn(part);
     sut.doPost(request, response);
-    verify(accessReporter).info("access: test.pdf; by: email@example.com; utm_content: test;");
+    verify(accessReporter).info("download: test.pdf; by: email@example.com; utm_content: test;");
   }
 
   // TODO the whole filestore should be a client so we can mock it and switch underlying tech, mock

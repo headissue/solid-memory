@@ -4,6 +4,8 @@ import com.headissue.feature.ApplicationServerExtension;
 import com.headissue.feature.steps.Then;
 import com.headissue.feature.steps.When;
 import com.headissue.service.TestDataService;
+import java.nio.file.Path;
+import java.util.HashMap;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,9 +15,6 @@ import org.junit.jupiter.api.io.TempDir;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-
-import java.nio.file.Path;
-import java.util.HashMap;
 
 @ExtendWith(ApplicationServerExtension.class)
 class AccessIT {
