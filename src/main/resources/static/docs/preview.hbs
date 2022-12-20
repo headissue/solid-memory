@@ -6,17 +6,27 @@
     {{> "head.hbs"}}
     <style>
         #id-form {
-            display: block;
             margin: 0 auto 1rem auto;
-            padding: 0 0.5rem;
-            max-width: 600px;
             -webkit-transition: opacity 0.2s 0.2s ease;
             -moz-transition: opacity 0.2s 0.2s ease;
             -o-transition: opacity 0.2s 0.2s ease;
             transition: opacity 0.2s 0.2s ease;
             opacity: 0;
+            position: absolute;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem 0;
+            height: 100vh;
         }
-
+        #id-form > div {
+            max-width: 300px;
+            background: white;
+            padding: 1rem;
+            border-radius: 10px
+        }
         #id-form form {
             display: flex;
             flex-direction: column;
@@ -31,35 +41,34 @@
 <body onload="document.getElementById('id-form').style.opacity=1">
 <main>
     <div id="id-form">
-        <p>
-            Please enter your email to get access to the full document.
-            {{#with accessRule}}
-                {{#if owner }}
-                    Your data will only be shared with {{owner}}.
-                {{/if}}
-            {{/with}}
-        </p>
-        <form method="post" enctype="multipart/form-data" action="/{{ id }}">
-            <fieldset>
-                <legend>required</legend>
-                <label>
-                    E-Mail:
-                    <input type="email" name="visitor">
-                </label>
-            </fieldset>
-            <fieldset>
-                <legend>optional</legend>
-                <label>
-                    <input type="checkbox" name="consentToMonthlyUpdates" value="true">
-                    Please send me monthly updates
-                </label>
-            </fieldset>
-            <button type="submit">SEND</button>
-        </form>
+        <div>
+            <p>
+                Please enter your email to get access to the full document.
+                {{#with accessRule}}
+                    {{#if owner }}
+                        Your data will only be shared with <b>{{owner}}</b>.
+                    {{/if}}
+                {{/with}}
+            </p>
+            <form method="post" enctype="multipart/form-data" action="/{{ id }}">
+                <fieldset>
+                    <label>
+                        E-Mail:
+                        <input type="email" name="visitor">
+                    </label>
+                </fieldset>
+                <fieldset>
+                    <label>
+                        <input type="checkbox" name="consentToMonthlyUpdates" value="true">
+                        Send me monthly updates
+                    </label>
+                </fieldset>
+                <button type="submit">GO!</button>
+            </form>
+        </div>
+
     </div>
-    <div style="width: 50%;margin: 0 auto;padding: 1%;background: #c7c7c7;">
         {{> organism/pdfCanvas.hbs}}
-    </div>
 </main>
 {{> "molecule/footer.hbs" }}
 </body>
