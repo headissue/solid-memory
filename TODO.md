@@ -20,6 +20,15 @@
 - [x] set and validate form key
 - [x] download always allowed
 
+- [ ] bug empty mail successful
+- [ ] preview page should always show footer
+- [ ] xyz.cc is a service of headissue, link imprint and contact 
+- [ ] auf der index groß xyz.cc und die footer links
+- [ ] circle e2e test 
+- [ ] preview: wirklich nur die erste seite ausliefern
+- [ ] favicon
+- [ ] donwload als parameter nicht url `/download`
+- [ ] set response header on donwload
 
 The content should not be easily accessed by robots or search engines. Maybe the email address should be checked and a PoW implemented
 
