@@ -19,14 +19,16 @@
             flex-direction: column;
             align-items: center;
             padding: 1rem 0;
-            height: 100vh;
+            height: 90vh;
         }
+
         #id-form > div {
             max-width: 300px;
             background: white;
             padding: 1rem;
             border-radius: 10px
         }
+
         #id-form form {
             display: flex;
             flex-direction: column;
@@ -54,7 +56,8 @@
                 <fieldset>
                     <label>
                         E-Mail:
-                        <input required type="email"  pattern="^.*@.*\..*$" name="visitor" onchange="document.getElementsByTagName('form')[0].action='/{{ id }}'">
+                        <input required type="email" pattern="^.*@.*\..*$" name="visitor"
+                               onchange="document.getElementsByTagName('form')[0].action='/{{ id }}'">
                     </label>
                 </fieldset>
                 <fieldset>
@@ -72,8 +75,14 @@
         </div>
 
     </div>
+    <div style="max-height: 100vh; overflow: hidden">
         {{> organism/pdfCanvas.hbs}}
+    </div>
 </main>
-{{> "molecule/footer.hbs" }}
+<div style=" position: absolute;
+            bottom: 0;
+            width: 100%;">
+    {{> "molecule/footer.hbs" }}
+</div>
 </body>
 </html>

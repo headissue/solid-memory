@@ -20,8 +20,7 @@
 - [x] set and validate form key
 - [x] download always allowed
 - [x] bug empty mail successful, only frontend check though
-
-- [ ] preview page should always show footer
+- [X] preview page should always show footer
 - [ ] xyz.cc is a service of headissue, link imprint and contact 
 - [ ] auf der index groß xyz.cc und die footer links
 - [ ] circle e2e test 
