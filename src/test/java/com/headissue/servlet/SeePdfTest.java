@@ -1,5 +1,6 @@
 package com.headissue.servlet;
 
+import static com.headissue.servlet.SeePdfTest.Given.given;
 import static org.mockito.Mockito.*;
 
 import com.github.jknack.handlebars.Handlebars;
@@ -17,6 +18,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,9 +50,8 @@ class SeePdfTest {
   }
 
   @BeforeEach
-  void setUp() throws ServletException, IOException {
+  void setUp() {
     request = mock(HttpServletRequest.class);
-    when(request.getParts()).thenReturn(List.of(mock(Part.class)));
     requestDispatcher = mock(RequestDispatcher.class, RETURNS_DEEP_STUBS);
     response = mock(HttpServletResponse.class, RETURNS_DEEP_STUBS);
     accessReporter = mock(Logger.class, RETURNS_DEEP_STUBS);
@@ -64,63 +65,32 @@ class SeePdfTest {
 
   @Test
   void whereSendingEmailAllowsAndTracksAccess() throws ServletException, IOException {
-    when(request.getPathInfo()).thenReturn("/" + willGrantAccess);
-    Part visitorPart = buildPart("visitor", "email@example.com");
-    when(request.getPart("visitor")).thenReturn(visitorPart);
-    Part consentToMonthlyUpdatePart = buildPart("consentToMonthlyUpdates", "false");
-    when(request.getPart("consentToMonthlyUpdates")).thenReturn(consentToMonthlyUpdatePart);
-    addFormKeys(request);
-
+    given(request).askingForAccessiblePdf().withAllPreconditionsMet();
     sut.doPost(request, response);
     verify(accessReporter)
         .info(
-            "access: test.pdf; by: email@example.com; utm_content: test; consentToMonthlyUpdates: false;");
-  }
-
-  private static void addFormKeys(HttpServletRequest request1)
-      throws IOException, ServletException {
-    Part formKeyPart = buildPart("key", "123123123");
-    when(request1.getPart("key")).thenReturn(formKeyPart);
-    Part formKeyHashPart = buildPart("hash", "123123123");
-    when(request1.getPart("hash")).thenReturn(formKeyHashPart);
+            "access: test.pdf; by: email@example.com; utm_content: test; consentTo: false;");
   }
 
   @Test
   void whereOptionalConsentToUpdateIsSend() throws ServletException, IOException {
-    when(request.getPathInfo()).thenReturn("/" + willGrantAccess);
-    Part visitorPart = buildPart("visitor", "email@example.com");
-    when(request.getPart("visitor")).thenReturn(visitorPart);
-    Part consentToMonthlyUpdatePart = buildPart("consentToMonthlyUpdates", "true");
-    when(request.getPart("consentToMonthlyUpdates")).thenReturn(consentToMonthlyUpdatePart);
-    addFormKeys(request);
+    given(request).askingForAccessiblePdf().withAllPreconditionsMet().withOptionalConsent();
     sut.doPost(request, response);
     verify(accessReporter)
         .info(
-            "access: test.pdf; by: email@example.com; utm_content: test; consentToMonthlyUpdates: true;");
-  }
-
-  private static Part buildPart(String key, String value) throws IOException {
-    Part visitor = mock(Part.class, RETURNS_DEEP_STUBS);
-    when(visitor.getName()).thenReturn(key);
-    when(visitor.getInputStream()).thenReturn(new ByteArrayInputStream(value.getBytes()));
-    return visitor;
+            "access: test.pdf; by: email@example.com; utm_content: test; consentTo: true;");
   }
 
   @Test
   void whereNoFormKeyIsSubmitted() throws ServletException, IOException {
-    when(request.getPathInfo()).thenReturn("/" + willGrantAccess);
-    Part visitorPart = buildPart("visitor", "email@example.com");
-    when(request.getPart("visitor")).thenReturn(visitorPart);
+    given(request).askingForAccessiblePdf().withAllPreconditionsMet().butMissingFormKeys();
     sut.doPost(request, response);
     verify(response).sendError(400);
   }
 
   @Test
   void whereDownloadingIsTracked() throws ServletException, IOException {
-    when(request.getPathInfo()).thenReturn("/" + downloadable + "/download");
-    Part part = buildPart("visitor", "email@example.com");
-    when(request.getPart("visitor")).thenReturn(part);
-    addFormKeys(request);
+    given(request).askingForPdfDownload().withAllPreconditionsMet();
     sut.doPost(request, response);
     verify(accessReporter).info("download: test.pdf; by: email@example.com; utm_content: test;");
   }
@@ -158,5 +128,68 @@ class SeePdfTest {
       yaml.dump(new AccessRule("test.pdf", 1, null, null, false), notDownloadableWriter);
     }
     Files.createFile(sharedTempDir.resolve("test.pdf"));
+  }
+
+  @SuppressWarnings("UnusedReturnValue")
+  static class Given {
+    private final HttpServletRequest request;
+    private final List<Part> parts = new ArrayList<>();
+
+    private Given(HttpServletRequest requestMock) throws ServletException, IOException {
+      this.request = requestMock;
+      when(request.getParts()).thenReturn(parts);
+    }
+
+    public static Given given(HttpServletRequest requestMock) throws ServletException, IOException {
+      return new Given(requestMock);
+    }
+
+    public Given askingForAccessiblePdf() {
+      when(request.getPathInfo()).thenReturn("/" + willGrantAccess);
+      return this;
+    }
+
+    public Given withAllPreconditionsMet() throws ServletException, IOException {
+      Part visitorPart = buildPart("visitor", "email@example.com");
+      when(request.getPart("visitor")).thenReturn(visitorPart);
+      parts.add(visitorPart);
+      withValidFormKeys();
+      return this;
+    }
+
+    private Given withValidFormKeys() throws IOException, ServletException {
+      Part formKeyPart = buildPart("key", "123123123");
+      when(request.getPart("key")).thenReturn(formKeyPart);
+      Part formKeyHashPart = buildPart("hash", "123123123");
+      when(request.getPart("hash")).thenReturn(formKeyHashPart);
+      parts.add(formKeyPart);
+      parts.add(formKeyHashPart);
+      return this;
+    }
+
+    public Given withOptionalConsent() throws IOException, ServletException {
+      Part consentPart = buildPart("consentTo", "true");
+      when(request.getPart("consentTo")).thenReturn(consentPart);
+      parts.add(consentPart);
+      return this;
+    }
+
+    public Given butMissingFormKeys() throws ServletException, IOException {
+      when(request.getPart("key")).thenReturn(null);
+      when(request.getPart("hash")).thenReturn(null);
+      parts.removeIf(part -> part.getName().equals("key") || part.getName().equals("hash"));
+      return this;
+    }
+
+    public Given askingForPdfDownload() {
+      when(request.getPathInfo()).thenReturn("/" + downloadable + "/download");
+      return this;
+    }
+    private static Part buildPart(String key, String value) throws IOException {
+      Part part = mock(Part.class, RETURNS_DEEP_STUBS);
+      when(part.getName()).thenReturn(key);
+      when(part.getInputStream()).thenReturn(new ByteArrayInputStream(value.getBytes()));
+      return part;
+    }
   }
 }

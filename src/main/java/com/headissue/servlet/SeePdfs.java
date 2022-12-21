@@ -137,12 +137,12 @@ public class SeePdfs extends HttpServlet {
       }
       return;
     }
-    Part consentToMonthlyUpdatesPart = req.getPart("consentToMonthlyUpdates");
-    Boolean consentToMonthlyUpdates =
-        consentToMonthlyUpdatesPart != null
-            && Boolean.parseBoolean(readPart(consentToMonthlyUpdatesPart));
+    Part consentToPart = req.getPart("consentTo");
+    Boolean consentTo =
+        consentToPart != null
+            && Boolean.parseBoolean(readPart(consentToPart));
 
-    report(accessRule, visitor, "access: ", consentToMonthlyUpdates);
+    report(accessRule, visitor, "access: ", consentTo);
 
     resp.setContentType(MimeTypes.Type.TEXT_HTML_UTF_8.asString());
     byte[] bytes = Files.readAllBytes(pdfPath);
@@ -211,7 +211,7 @@ public class SeePdfs extends HttpServlet {
   }
 
   private void report(
-      AccessRule accessRule, String visitor, String type, Boolean consentToMonthlyUpdates) {
+      AccessRule accessRule, String visitor, String type, Boolean consentTo) {
     StringBuilder sb = new StringBuilder();
     sb.append(type).append(accessRule.getFileName()).append("; ");
     sb.append("by: ").append(visitor).append("; ");
@@ -238,8 +238,8 @@ public class SeePdfs extends HttpServlet {
         sb.append("utm_term: ").append(term).append("; ");
       }
     }
-    if (consentToMonthlyUpdates != null) {
-      sb.append("consentToMonthlyUpdates: ").append(consentToMonthlyUpdates).append("; ");
+    if (consentTo != null) {
+      sb.append("consentTo: ").append(consentTo).append("; ");
     }
     pdfLogger.info(sb.toString().trim());
   }
