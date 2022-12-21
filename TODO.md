@@ -19,8 +19,8 @@
 - [x] only set form action when email is entered to prevent 🤷
 - [x] set and validate form key
 - [x] download always allowed
+- [x] bug empty mail successful, only frontend check though
 
-- [ ] bug empty mail successful
 - [ ] preview page should always show footer
 - [ ] xyz.cc is a service of headissue, link imprint and contact 
 - [ ] auf der index groß xyz.cc und die footer links

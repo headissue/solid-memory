@@ -54,7 +54,7 @@
                 <fieldset>
                     <label>
                         E-Mail:
-                        <input type="email" name="visitor" onchange="document.getElementsByTagName('form')[0].action='/{{ id }}'">
+                        <input required type="email"  pattern="^.*@.*\..*$" name="visitor" onchange="document.getElementsByTagName('form')[0].action='/{{ id }}'">
                     </label>
                 </fieldset>
                 <fieldset>
