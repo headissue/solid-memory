@@ -25,7 +25,7 @@
 - [x] auf der index groß xyz.cc und die footer links
 - [x] preview: wirklich nur die erste seite ausliefern
 - [x] favicon
-- [ ] donwload als parameter nicht url `/download`
+- [x] donwload als parameter nicht url `/download`
 - [ ] set response header on donwload
 - [ ] circle e2e test
 

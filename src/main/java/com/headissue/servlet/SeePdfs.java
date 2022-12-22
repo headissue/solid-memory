@@ -138,8 +138,8 @@ public class SeePdfs extends HttpServlet {
 
     String visitor = readPart(req.getPart(visitorPartKey));
 
-    if (pathInfo.matches(format(".*.{%d}/download$", NanoIdConfig.length))) {
-
+    String queryString = req.getQueryString();
+    if (queryString != null && queryString.equals("download")) {
       reportDownload(accessRule, visitor);
 
       byte[] buffer = new byte[1024];
