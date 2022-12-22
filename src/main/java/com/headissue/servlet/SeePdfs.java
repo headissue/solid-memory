@@ -1,5 +1,7 @@
 package com.headissue.servlet;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.internal.lang3.StringUtils;
 import com.headissue.config.NanoIdConfig;
@@ -11,13 +13,6 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
-import org.apache.pdfbox.multipdf.PageExtractor;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.eclipse.jetty.http.MimeTypes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.yaml.snakeyaml.Yaml;
-
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -30,9 +25,12 @@ import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.Map;
-
-import static java.lang.String.format;
-import static java.nio.charset.StandardCharsets.UTF_8;
+import org.apache.pdfbox.multipdf.PageExtractor;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.eclipse.jetty.http.MimeTypes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
 
 public class SeePdfs extends HttpServlet {
 
@@ -110,7 +108,6 @@ public class SeePdfs extends HttpServlet {
   protected void doPost(HttpServletRequest req, HttpServletResponse resp)
       throws ServletException, IOException {
 
-    String pathInfo = req.getPathInfo();
     String accessId =
         StringUtils.left(req.getPathInfo().substring("/".length()), NanoIdConfig.length);
     Path accessYaml = Paths.get(directory.getPath(), Path.of(accessId).getFileName() + ".yaml");

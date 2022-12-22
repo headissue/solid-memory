@@ -180,7 +180,8 @@ class SeePdfTest {
     }
 
     public Given askingForPdfDownload() {
-      when(request.getPathInfo()).thenReturn("/" + downloadable + "/download");
+      when(request.getPathInfo()).thenReturn("/" + downloadable);
+      when(request.getQueryString()).thenReturn("download");
       return this;
     }
 
