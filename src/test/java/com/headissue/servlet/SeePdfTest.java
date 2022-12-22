@@ -68,8 +68,7 @@ class SeePdfTest {
     given(request).askingForAccessiblePdf().withAllPreconditionsMet();
     sut.doPost(request, response);
     verify(accessReporter)
-        .info(
-            "access: test.pdf; by: email@example.com; utm_content: test; consentTo: false;");
+        .info("access: test.pdf; by: email@example.com; utm_content: test; consentTo: false;");
   }
 
   @Test
@@ -77,8 +76,7 @@ class SeePdfTest {
     given(request).askingForAccessiblePdf().withAllPreconditionsMet().withOptionalConsent();
     sut.doPost(request, response);
     verify(accessReporter)
-        .info(
-            "access: test.pdf; by: email@example.com; utm_content: test; consentTo: true;");
+        .info("access: test.pdf; by: email@example.com; utm_content: test; consentTo: true;");
   }
 
   @Test
@@ -185,6 +183,7 @@ class SeePdfTest {
       when(request.getPathInfo()).thenReturn("/" + downloadable + "/download");
       return this;
     }
+
     private static Part buildPart(String key, String value) throws IOException {
       Part part = mock(Part.class, RETURNS_DEEP_STUBS);
       when(part.getName()).thenReturn(key);

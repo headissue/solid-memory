@@ -23,11 +23,11 @@
 - [X] preview page should always show footer
 - [x] xyz.cc is a service of headissue, link imprint and contact 
 - [x] auf der index groß xyz.cc und die footer links
-- [ ] circle e2e test 
-- [ ] preview: wirklich nur die erste seite ausliefern
+- [x] preview: wirklich nur die erste seite ausliefern
 - [ ] favicon
 - [ ] donwload als parameter nicht url `/download`
 - [ ] set response header on donwload
+- [ ] circle e2e test
 
 The content should not be easily accessed by robots or search engines. Maybe the email address should be checked and a PoW implemented
 

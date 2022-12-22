@@ -1,8 +1,5 @@
 package com.headissue.servlet;
 
-import static java.lang.String.format;
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.internal.lang3.StringUtils;
 import com.headissue.config.NanoIdConfig;
@@ -14,6 +11,13 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
+import org.apache.pdfbox.multipdf.PageExtractor;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.eclipse.jetty.http.MimeTypes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
+
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -23,12 +27,12 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Map;
-import org.eclipse.jetty.http.MimeTypes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.yaml.snakeyaml.Yaml;
+
+import static java.lang.String.format;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class SeePdfs extends HttpServlet {
 
@@ -73,9 +77,6 @@ public class SeePdfs extends HttpServlet {
       return;
     }
     Path pdfPath = Paths.get(directory.getPath(), accessRule.getFileName());
-    byte[] bytes = Files.readAllBytes(pdfPath);
-    byte[] encoded = java.util.Base64.getEncoder().encode(bytes);
-    String base64Pdf = new String(encoded);
 
     handlebars
         .compile("docs/preview.hbs")
@@ -86,10 +87,23 @@ public class SeePdfs extends HttpServlet {
                 "accessRule",
                 accessRule,
                 "base64Pdf",
-                base64Pdf,
+                firstPageAsBase64String(pdfPath),
                 "formKey",
                 formKeyService.getFormKey()),
             resp.getWriter());
+  }
+
+  private static String firstPageAsBase64String(Path pdfPath) throws IOException {
+    String base64Pdf;
+    try (PDDocument load = PDDocument.load(pdfPath.toFile())) {
+      PageExtractor pageExtractor = new PageExtractor(load, 1, 1);
+      try (PDDocument pdDocument = pageExtractor.extract()) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        pdDocument.save(baos);
+        base64Pdf = Base64.getEncoder().encodeToString(baos.toByteArray());
+      }
+    }
+    return base64Pdf;
   }
 
   @Override
@@ -138,9 +152,7 @@ public class SeePdfs extends HttpServlet {
       return;
     }
     Part consentToPart = req.getPart("consentTo");
-    Boolean consentTo =
-        consentToPart != null
-            && Boolean.parseBoolean(readPart(consentToPart));
+    Boolean consentTo = consentToPart != null && Boolean.parseBoolean(readPart(consentToPart));
 
     report(accessRule, visitor, "access: ", consentTo);
 
@@ -210,8 +222,7 @@ public class SeePdfs extends HttpServlet {
     report(accessRule, visitor, "download: ", null);
   }
 
-  private void report(
-      AccessRule accessRule, String visitor, String type, Boolean consentTo) {
+  private void report(AccessRule accessRule, String visitor, String type, Boolean consentTo) {
     StringBuilder sb = new StringBuilder();
     sb.append(type).append(accessRule.getFileName()).append("; ");
     sb.append("by: ").append(visitor).append("; ");
