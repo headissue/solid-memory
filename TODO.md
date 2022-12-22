@@ -26,7 +26,7 @@
 - [x] preview: wirklich nur die erste seite ausliefern
 - [x] favicon
 - [x] donwload als parameter nicht url `/download`
-- [ ] set response header on donwload
+- [x] set response header on donwload
 - [ ] circle e2e test
 
 The content should not be easily accessed by robots or search engines. Maybe the email address should be checked and a PoW implemented

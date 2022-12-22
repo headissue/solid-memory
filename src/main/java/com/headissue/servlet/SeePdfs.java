@@ -143,6 +143,7 @@ public class SeePdfs extends HttpServlet {
       reportDownload(accessRule, visitor);
 
       byte[] buffer = new byte[1024];
+      resp.setContentType("application/pdf");
       try (InputStream in = Files.newInputStream(pdfPath)) {
         OutputStream output = resp.getOutputStream();
         for (int length; (length = in.read(buffer)) > 0; ) {
