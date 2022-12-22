@@ -24,7 +24,7 @@
 - [x] xyz.cc is a service of headissue, link imprint and contact 
 - [x] auf der index groß xyz.cc und die footer links
 - [x] preview: wirklich nur die erste seite ausliefern
-- [ ] favicon
+- [x] favicon
 - [ ] donwload als parameter nicht url `/download`
 - [ ] set response header on donwload
 - [ ] circle e2e test

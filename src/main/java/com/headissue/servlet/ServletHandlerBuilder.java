@@ -49,6 +49,7 @@ public class ServletHandlerBuilder {
     servletHandler.addServlet(new ServletHolder("static/img", defaultServlet), "/img/*");
     servletHandler.addServlet(new ServletHolder("static/css", defaultServlet), "/css/*");
     servletHandler.addServlet(new ServletHolder("static/js", defaultServlet), "/js/*");
+    servletHandler.addServlet(new ServletHolder("static/js", defaultServlet), "/favicon.ico");
   }
 
   public void addSeePdfs(File directory, Handlebars handlebars) {
