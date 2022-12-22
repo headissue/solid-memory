@@ -4,10 +4,19 @@
     <title>Welcome</title>
     {{> "head.hbs"}}
 </head>
-<body style="background: url('/img/logo.png')">
-<main>
-    {{> "atom/testPartial.hbs" name="solid memory" serving=true }}
+<body style="background: url('/img/Solid-polymeric-foam.jpg'); background-size: cover">
+<main style="display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-content: flex-end;">
+    <h1 style="text-shadow: 1px 1px #888">xyz.cc</h1>
+    <div style="text-shadow: 1px 1px #888; font-size: 0.8rem">
+    <a href="https://commons.wikimedia.org/wiki/File:Solid-polymeric-foam.jpg">Giovanna Canu, Eva Santini</a>, <a
+        href="https://creativecommons.org/licenses/by/4.0">CC BY 4.0</a>, via Wikimedia Commons
+    </div>
 </main>
+
 {{> "molecule/footer.hbs" }}
 </body>
 </html>

@@ -1,0 +1,3 @@
+|                          |                                                                                                            |
+|--------------------------|------------------------------------------------------------------------------------------------------------|
+| Solid-polymeric-foam.jpg | Giovanna Canu, Eva Santini, CC BY 4.0 <https://creativecommons.org/licenses/by/4.0>, via Wikimedia Commons |

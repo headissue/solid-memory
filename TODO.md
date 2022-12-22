@@ -22,7 +22,7 @@
 - [x] bug empty mail successful, only frontend check though
 - [X] preview page should always show footer
 - [x] xyz.cc is a service of headissue, link imprint and contact 
-- [ ] auf der index groß xyz.cc und die footer links
+- [x] auf der index groß xyz.cc und die footer links
 - [ ] circle e2e test 
 - [ ] preview: wirklich nur die erste seite ausliefern
 - [ ] favicon
