@@ -9,7 +9,6 @@
 - [x] url without prefix and 8 chars: https://xyz.cc/abcd1234, I used NanoId default `a-zA-z0-9_-`
 - [x] some static text at /index.html
 - [x] footer with link to privacy bla
-- [ ] actually create that privacy bla page
 - [x] move Previous / Next to the right. "Page 1 / 4 Previous Next"
 - [x] Owner field: Please enter your email to continue. Add "Your data will only be shared with John Doe". http://localhost:8080/00000000 
 - [x] optional download button see http://localhost:8080/00000001
@@ -27,6 +26,11 @@
 - [x] favicon
 - [x] donwload als parameter nicht url `/download`
 - [x] set response header on donwload
+
+- [ ] send 404 for unknown links and don't log
+- [ ] generate preview page as blury jpeg. extracting the first page from the PDF does not reduce file size much
+- [ ] set proper filename for download
+
 - [ ] circle e2e test
 
 The content should not be easily accessed by robots or search engines. Maybe the email address should be checked and a PoW implemented
