@@ -1,5 +1,7 @@
 package com.headissue.servlet;
 
+import static com.headissue.service.FormKeyService.FORM_KEY;
+import static com.headissue.service.FormKeyService.FORM_KEY_HASH;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.github.jknack.handlebars.Handlebars;
@@ -58,95 +60,41 @@ public class SeePdfs extends HttpServlet {
 
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-    resp.setContentType(MimeTypes.Type.TEXT_HTML_UTF_8.asString());
-    String pathInfo = req.getPathInfo();
-    String accessId = pathInfo.substring("/".length());
-    Path accessYaml = Paths.get(directory.getPath(), Path.of(accessId).getFileName() + ".yaml");
-    if (Files.notExists(accessYaml)) {
-      throw new NoSuchFileException(accessId);
-    }
-    resp.setContentType(MimeTypes.Type.TEXT_HTML_UTF_8.asString());
+    String accessId = getAccessId(req);
+    Path accessYaml = getAccessYaml(accessId);
+    checkExistence(accessId, accessYaml);
     AccessRule accessRule = yaml.loadAs(new FileInputStream(accessYaml.toFile()), AccessRule.class);
     if (isExpired(accessYaml)) {
-      resp.setStatus(HttpServletResponse.SC_GONE);
-      handlebars
-          .compile("docs/expired.hbs")
-          .apply(Map.of("accessRule", accessRule), resp.getWriter());
+      writeExpiredPage(resp, accessRule);
       return;
     }
-    Path pdfPath = Paths.get(directory.getPath(), accessRule.getFileName());
-
-    handlebars
-        .compile("docs/preview.hbs")
-        .apply(
-            Map.of(
-                "id",
-                accessId,
-                "accessRule",
-                accessRule,
-                "base64Pdf",
-                firstPageAsBase64String(pdfPath),
-                "formKey",
-                formKeyService.getFormKey()),
-            resp.getWriter());
-  }
-
-  private static String firstPageAsBase64String(Path pdfPath) throws IOException {
-    String base64Pdf;
-    try (PDDocument load = PDDocument.load(pdfPath.toFile())) {
-      PageExtractor pageExtractor = new PageExtractor(load, 1, 1);
-      try (PDDocument pdDocument = pageExtractor.extract()) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        pdDocument.save(baos);
-        base64Pdf = Base64.getEncoder().encodeToString(baos.toByteArray());
-      }
-    }
-    return base64Pdf;
+    writePreviewPage(resp, accessId, accessRule);
   }
 
   @Override
   protected void doPost(HttpServletRequest req, HttpServletResponse resp)
       throws ServletException, IOException {
-
-    String accessId =
-        StringUtils.left(req.getPathInfo().substring("/".length()), NanoIdConfig.length);
-    Path accessYaml = Paths.get(directory.getPath(), Path.of(accessId).getFileName() + ".yaml");
+    String accessId = getAccessId(req);
+    Path accessYaml = getAccessYaml(accessId);
     checkExistenceAndExpiry(accessId, accessYaml);
     AccessRule accessRule = yaml.loadAs(new FileInputStream(accessYaml.toFile()), AccessRule.class);
     Path pdfPath = Paths.get(directory.getPath(), accessRule.getFileName());
 
     String visitorPartKey = "visitor";
-    String formKey = "key";
-    String formKeyHash = "hash";
-    if (isMissingRequiredParts(req, visitorPartKey, formKey, formKeyHash)) {
+    if (isMissingRequiredParts(req, visitorPartKey, FORM_KEY, FORM_KEY_HASH)) {
       resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
       return;
     }
     if (!formKeyService.isValid(
-        readPart(req.getPart(formKeyHash)), readPart(req.getPart(formKey)))) {
-      resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
-      return;
-    }
-
-    if (isMissingRequiredParts(req, visitorPartKey)) {
+        readPart(req.getPart(FORM_KEY_HASH)), readPart(req.getPart(FORM_KEY)))) {
       resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
       return;
     }
 
     String visitor = readPart(req.getPart(visitorPartKey));
-
     String queryString = req.getQueryString();
     if (queryString != null && queryString.equals("download")) {
-      reportDownload(accessRule, visitor);
-
-      byte[] buffer = new byte[1024];
-      resp.setContentType("application/pdf");
-      try (InputStream in = Files.newInputStream(pdfPath)) {
-        OutputStream output = resp.getOutputStream();
-        for (int length; (length = in.read(buffer)) > 0; ) {
-          output.write(buffer, 0, length);
-        }
-      }
+      writePdfFileResponse(resp, accessRule, pdfPath, visitor);
       return;
     }
     Part consentToPart = req.getPart("consentTo");
@@ -154,9 +102,19 @@ public class SeePdfs extends HttpServlet {
 
     report(accessRule, visitor, "access: ", consentTo);
 
+    writePdfDocumentPage(resp, accessId, accessRule, pdfPath, visitor);
+  }
+
+  private void writePdfDocumentPage(
+      HttpServletResponse resp,
+      String accessId,
+      AccessRule accessRule,
+      Path pdfPath,
+      String visitor)
+      throws IOException {
     resp.setContentType(MimeTypes.Type.TEXT_HTML_UTF_8.asString());
     byte[] bytes = Files.readAllBytes(pdfPath);
-    byte[] encoded = java.util.Base64.getEncoder().encode(bytes);
+    byte[] encoded = Base64.getEncoder().encode(bytes);
     String base64Pdf = new String(encoded);
 
     handlebars
@@ -174,6 +132,65 @@ public class SeePdfs extends HttpServlet {
                 "formKey",
                 formKeyService.getFormKey()),
             resp.getWriter());
+  }
+
+  private void writePdfFileResponse(
+      HttpServletResponse resp, AccessRule accessRule, Path pdfPath, String visitor)
+      throws IOException {
+    reportDownload(accessRule, visitor);
+    byte[] buffer = new byte[1024];
+    resp.setContentType("application/pdf");
+    try (InputStream in = Files.newInputStream(pdfPath)) {
+      OutputStream output = resp.getOutputStream();
+      for (int length; (length = in.read(buffer)) > 0; ) {
+        output.write(buffer, 0, length);
+      }
+    }
+  }
+
+  private Path getAccessYaml(String accessId) {
+    return Paths.get(directory.getPath(), Path.of(accessId).getFileName() + ".yaml");
+  }
+
+  private void writePreviewPage(HttpServletResponse resp, String accessId, AccessRule accessRule)
+      throws IOException {
+    Path pdfPath = Paths.get(directory.getPath(), accessRule.getFileName());
+    resp.setContentType(MimeTypes.Type.TEXT_HTML_UTF_8.asString());
+    handlebars
+        .compile("docs/preview.hbs")
+        .apply(
+            Map.of(
+                "id",
+                accessId,
+                "accessRule",
+                accessRule,
+                "base64Pdf",
+                firstPageAsBase64String(pdfPath),
+                "formKey",
+                formKeyService.getFormKey()),
+            resp.getWriter());
+  }
+
+  private void writeExpiredPage(HttpServletResponse resp, AccessRule accessRule)
+      throws IOException {
+    resp.setContentType(MimeTypes.Type.TEXT_HTML_UTF_8.asString());
+    resp.setStatus(HttpServletResponse.SC_GONE);
+    handlebars
+        .compile("docs/expired.hbs")
+        .apply(Map.of("accessRule", accessRule), resp.getWriter());
+  }
+
+  private static String firstPageAsBase64String(Path pdfPath) throws IOException {
+    String base64Pdf;
+    try (PDDocument load = PDDocument.load(pdfPath.toFile())) {
+      PageExtractor pageExtractor = new PageExtractor(load, 1, 1);
+      try (PDDocument pdDocument = pageExtractor.extract()) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        pdDocument.save(baos);
+        base64Pdf = Base64.getEncoder().encodeToString(baos.toByteArray());
+      }
+    }
+    return base64Pdf;
   }
 
   private static String readPart(Part req) throws IOException {
@@ -254,11 +271,23 @@ public class SeePdfs extends HttpServlet {
   }
 
   private void checkExistenceAndExpiry(String accessId, Path accessYaml) throws IOException {
-    if (Files.notExists(accessYaml)) {
-      throw new NoSuchFileException(accessId);
-    }
+    checkExistence(accessId, accessYaml);
+    checkExpiry(accessId, accessYaml);
+  }
+
+  private void checkExpiry(String accessId, Path accessYaml) throws IOException {
     if (isExpired(accessYaml)) {
       throw new NoSuchFileException(accessId);
     }
+  }
+
+  private static void checkExistence(String accessId, Path accessYaml) throws NoSuchFileException {
+    if (Files.notExists(accessYaml)) {
+      throw new NoSuchFileException(accessId);
+    }
+  }
+
+  private static String getAccessId(HttpServletRequest req) {
+    return StringUtils.left(req.getPathInfo().substring("/".length()), NanoIdConfig.length);
   }
 }

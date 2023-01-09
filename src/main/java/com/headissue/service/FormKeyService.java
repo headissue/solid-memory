@@ -7,7 +7,10 @@ public class FormKeyService {
 
   private static final Random random = new Random();
 
-  private static String secret = String.valueOf(random.nextInt());
+  private static final String secret = String.valueOf(random.nextInt());
+
+  public static final String FORM_KEY = "key";
+  public static final String FORM_KEY_HASH = "hash";
 
   public FormKey getFormKey() {
     String key =
@@ -21,8 +24,8 @@ public class FormKeyService {
   }
 
   static class FormKey {
-    private String hash;
-    private String key;
+    private final String hash;
+    private final String key;
 
     public FormKey(String key) {
       this.hash = String.valueOf((key + secret).hashCode());
