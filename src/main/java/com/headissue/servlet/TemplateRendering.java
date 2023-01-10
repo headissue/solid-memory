@@ -19,7 +19,8 @@ public class TemplateRendering extends HttpServlet {
   }
 
   @Override
-  protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+  protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+      throws IOException, ServletException {
     resp.setContentType(MimeTypes.Type.TEXT_HTML_UTF_8.asString());
     String pathInfo = req.getPathInfo();
     if (pathInfo.equals("/")) {
