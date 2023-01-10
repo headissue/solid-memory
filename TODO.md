@@ -28,7 +28,7 @@
 - [x] set response header on donwload
 
 - [ ] send 404 for unknown links and don't log
-- [ ] generate preview page as blury jpeg. extracting the first page from the PDF does not reduce file size much
+- [x] generate preview page as blurry jpeg. extracting the first page from the PDF does not reduce file size much
 - [ ] set proper filename for download
 
 - [ ] circle e2e test

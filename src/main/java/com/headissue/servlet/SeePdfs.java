@@ -15,6 +15,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -27,9 +28,11 @@ import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.Map;
+import javax.imageio.ImageIO;
 import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.multipdf.PageExtractor;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.rendering.ImageType;
+import org.apache.pdfbox.rendering.PDFRenderer;
 import org.eclipse.jetty.http.MimeTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -165,8 +168,8 @@ public class SeePdfs extends HttpServlet {
                 accessId,
                 "accessRule",
                 accessRule,
-                "base64Pdf",
-                firstPageAsBase64String(pdfPath),
+                "base64Jpeg",
+                firstPageAsBase64Jpeg(pdfPath),
                 "formKey",
                 formKeyService.getFormKey()),
             resp.getWriter());
@@ -181,17 +184,16 @@ public class SeePdfs extends HttpServlet {
         .apply(Map.of("accessRule", accessRule), resp.getWriter());
   }
 
-  private static String firstPageAsBase64String(Path pdfPath) throws IOException {
-    String base64Pdf;
+  private static String firstPageAsBase64Jpeg(Path pdfPath) throws IOException {
+    String base64Jpeg;
     try (PDDocument load = Loader.loadPDF(pdfPath.toFile())) {
-      PageExtractor pageExtractor = new PageExtractor(load, 1, 1);
-      try (PDDocument pdDocument = pageExtractor.extract()) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        pdDocument.save(baos);
-        base64Pdf = Base64.getEncoder().encodeToString(baos.toByteArray());
-      }
+      PDFRenderer pdfRenderer = new PDFRenderer(load);
+      BufferedImage bim = pdfRenderer.renderImageWithDPI(0, 300, ImageType.RGB);
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      ImageIO.write(bim, "JPEG", baos);
+      base64Jpeg = Base64.getEncoder().encodeToString(baos.toByteArray());
     }
-    return base64Pdf;
+    return base64Jpeg;
   }
 
   private static String readPart(Part req) throws IOException {
