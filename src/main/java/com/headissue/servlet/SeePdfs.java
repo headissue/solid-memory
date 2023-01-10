@@ -27,6 +27,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.Map;
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.multipdf.PageExtractor;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.eclipse.jetty.http.MimeTypes;
@@ -182,7 +183,7 @@ public class SeePdfs extends HttpServlet {
 
   private static String firstPageAsBase64String(Path pdfPath) throws IOException {
     String base64Pdf;
-    try (PDDocument load = PDDocument.load(pdfPath.toFile())) {
+    try (PDDocument load = Loader.loadPDF(pdfPath.toFile())) {
       PageExtractor pageExtractor = new PageExtractor(load, 1, 1);
       try (PDDocument pdDocument = pageExtractor.extract()) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
