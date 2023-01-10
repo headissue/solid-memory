@@ -27,7 +27,7 @@
 - [x] donwload als parameter nicht url `/download`
 - [x] set response header on donwload
 
-- [ ] send 404 for unknown links and don't log
+- [x] send 404 for unknown links and don't log
 - [x] generate preview page as blurry jpeg. extracting the first page from the PDF does not reduce file size much
 - [ ] set proper filename for download
 

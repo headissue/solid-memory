@@ -63,10 +63,13 @@ public class SeePdfs extends HttpServlet {
   }
 
   @Override
-  protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+  protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
     String accessId = getAccessId(req);
     Path accessYaml = getAccessYaml(accessId);
-    checkExistence(accessId, accessYaml);
+    if (Files.notExists(accessYaml)) {
+       req.getRequestDispatcher("/404").forward(req, resp);
+       return;
+    }
     AccessRule accessRule = yaml.loadAs(new FileInputStream(accessYaml.toFile()), AccessRule.class);
     if (isExpired(accessYaml)) {
       writeExpiredPage(resp, accessRule);
