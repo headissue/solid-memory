@@ -63,12 +63,13 @@ public class SeePdfs extends HttpServlet {
   }
 
   @Override
-  protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+  protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+      throws IOException, ServletException {
     String accessId = getAccessId(req);
     Path accessYaml = getAccessYaml(accessId);
     if (Files.notExists(accessYaml)) {
-       req.getRequestDispatcher("/404").forward(req, resp);
-       return;
+      req.getRequestDispatcher("/404").forward(req, resp);
+      return;
     }
     AccessRule accessRule = yaml.loadAs(new FileInputStream(accessYaml.toFile()), AccessRule.class);
     if (isExpired(accessYaml)) {
@@ -147,6 +148,7 @@ public class SeePdfs extends HttpServlet {
     reportDownload(accessRule, visitor);
     byte[] buffer = new byte[1024];
     resp.setContentType("application/pdf");
+    resp.setHeader("Content-Disposition", String.format("filename=\"%s\"", pdfPath.getFileName()));
     try (InputStream in = Files.newInputStream(pdfPath)) {
       OutputStream output = resp.getOutputStream();
       for (int length; (length = in.read(buffer)) > 0; ) {
