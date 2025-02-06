@@ -69,4 +69,10 @@ class AccessIT {
     when.theyDownloadIt();
     then.theyShouldSeeItsDownloaded(tempDir);
   }
+
+  @Test
+  void whereTheLinkTargetDoesNotExist() {
+    when.theyOpenTheTestPdf("a;lkdfjas;dlkfjas;dlfkjasd;fkljasd");
+    then.theyShould404Page();
+  }
 }

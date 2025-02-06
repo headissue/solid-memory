@@ -10,21 +10,11 @@
         </encoder>
     </appender>
 
-    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${jetty.home:-target}/logs/jetty.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${jetty.home:-target}/logs/jetty.log.%d{yyyy-MM-dd-HH-mm}.log.zip</fileNamePattern>
-        </rollingPolicy>
-        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-            <maxFileSize>1KB</maxFileSize>
-        </triggeringPolicy>
-        <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-        </encoder>
-    </appender>
-
+    <!-- blank out log messages caused by illegal URLs that yield 404 -->
+    <logger level="ERROR" name="org.eclipse.jetty.server.HttpChannel" additivity="false">
+        <appender-ref ref="STDOUT" />
+    </logger>
     <root level="INFO">
         <appender-ref ref="STDOUT" />
-        <appender-ref ref="FILE" />
     </root>
 </configuration>

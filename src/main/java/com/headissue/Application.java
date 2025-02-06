@@ -22,6 +22,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.ErrorPageErrorHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.resource.ResourceCollection;
@@ -89,6 +90,10 @@ public class Application {
 
   private static ServletContextHandler buildHandler(File directory) {
     ServletContextHandler servletContextHandler = buildServletContextHandler();
+    final ErrorPageErrorHandler errorHandler = new ErrorPageErrorHandler();
+    errorHandler.addErrorPage(Throwable.class, "/500");
+    errorHandler.addErrorPage(NotFoundException.class, "/404");
+    servletContextHandler.setErrorHandler(errorHandler);
     ServletHandlerBuilder builder = new ServletHandlerBuilder(servletContextHandler);
     builder.addForwardIdToDocumentFilter();
     builder.addPdfUpload(directory);

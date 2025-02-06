@@ -1,11 +1,11 @@
 package com.headissue.servlet;
 
 import com.github.jknack.handlebars.Handlebars;
+import com.headissue.NotFoundException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import org.eclipse.jetty.http.MimeTypes;
@@ -27,9 +27,12 @@ public class TemplateRendering extends HttpServlet {
       handlebars.compile("index.hbs").apply(null, resp.getWriter());
     } else {
       try {
+        if ("/404".equals(pathInfo)) {
+          resp.setStatus(404);
+        }
         handlebars.compile(pathInfo + ".hbs").apply(null, resp.getWriter());
       } catch (FileNotFoundException e) {
-        req.getRequestDispatcher("/404").forward(req, resp);
+        throw new NotFoundException(e);
       }
     }
   }

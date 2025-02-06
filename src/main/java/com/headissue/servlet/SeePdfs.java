@@ -6,6 +6,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.internal.lang3.StringUtils;
+import com.headissue.NotFoundException;
 import com.headissue.config.NanoIdConfig;
 import com.headissue.domain.AccessRule;
 import com.headissue.domain.UtmParameters;
@@ -68,8 +69,7 @@ public class SeePdfs extends HttpServlet {
     String accessId = getAccessId(req);
     Path accessYaml = getAccessYaml(accessId);
     if (Files.notExists(accessYaml)) {
-      req.getRequestDispatcher("/404").forward(req, resp);
-      return;
+      throw new NotFoundException();
     }
     AccessRule accessRule = yaml.loadAs(new FileInputStream(accessYaml.toFile()), AccessRule.class);
     if (isExpired(accessYaml)) {

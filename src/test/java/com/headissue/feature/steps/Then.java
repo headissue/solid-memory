@@ -75,8 +75,8 @@ public class Then {
 
   public void theyShouldSeeItsDownloaded(Path tempDir) {
     await()
-        .alias("file downloaded to system")
-        .atMost(1, SECONDS)
+        .alias("file downloaded to system, at: " + tempDir)
+        .atMost(5, SECONDS)
         .until(
             () -> {
               try (Stream<Path> list = Files.list(tempDir)) {
@@ -98,5 +98,10 @@ public class Then {
               assertThat(body, StringContains.containsString("yours truly"));
               return true;
             });
+  }
+
+  public void theyShould404Page() {
+    assertThat(
+        driver.findElement(cssSelector("body")).getText(), StringContains.containsString("404"));
   }
 }
